@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from models.bill import BillExtraction, ChargeItem
+from models.bill import BillExtraction, ChargeLine
 
 
 class ExtractionError(Exception):
@@ -42,9 +42,9 @@ _STUB_EXTRACTION = BillExtraction(
     meter_reading_current=12310,
     units_consumed=310,
     charges=[
-        ChargeItem(name="Energy charges", amount_pkr=6200.0),
-        ChargeItem(name="Fuel charge adjustment", amount_pkr=410.5),
-        ChargeItem(name="GST", amount_pkr=1150.0),
+        ChargeLine(name="Energy charges", amount_pkr=6200.0),
+        ChargeLine(name="Fuel charge adjustment", amount_pkr=410.5),
+        ChargeLine(name="GST", amount_pkr=1150.0),
     ],
     arrears_pkr=0,
     total_payable_by_due_date=8000.0,
