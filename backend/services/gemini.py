@@ -21,6 +21,7 @@ class GeminiError(Exception):
 
 
 def _model_name() -> str:
+    # remove this comment when Baig's config module merges to dev.
     # TODO(SCRUM-6): switch to config.py once it merges to dev.
     return os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
 
