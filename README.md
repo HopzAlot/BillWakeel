@@ -26,20 +26,22 @@ Design rules: arithmetic is done in deterministic Python, never by the LLM; a fi
 - Storage: SQLite with SQLAlchemy, vector store for tariff clauses
 
 ## Repository layout
-
-```
-BillWakeel/
-├── backend/        # FastAPI app: api/, agents/, services/, models/
-├── frontend/       # React (Vite) app
-├── prompts/        # versioned prompts per agent + CHANGELOG.md
-├── data/
-│   ├── tariffs/    # raw/ source documents, structured/ JSON
-│   └── samples/    # anonymised bills and ground-truth labels
-├── tests/          # unit/, integration/, prompt/, eval/
-├── docs/           # roadmap, decisions, DoR/DoD, sprint reviews, eval results
-├── CONTRIBUTING.md
-└── README.md
-```
+backend/
+  agents/
+  api/
+  services/
+  models/
+frontend/
+data/
+  tariffs/
+  samples/
+tests/
+  unit/
+  integration/
+  prompt/
+  eval/
+docs/
+prompts/
 
 ## Getting started
 
