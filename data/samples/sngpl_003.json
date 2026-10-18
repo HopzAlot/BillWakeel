@@ -1,0 +1,35 @@
+{
+  "utility": "gas",
+  "provider": "SNGPL",
+  "billing_month": "2026-07",
+  "issue_date": "2026-08-20",
+  "due_date": "2026-09-03",
+  "tariff_category": "DOMP-G",
+  "sanctioned_load_kw": null,
+  "meter_reading_previous": 4558000,
+  "meter_reading_current": 4577000,
+  "units_consumed": 0.194,
+  "charges": [
+    {
+      "name": "Gas charges",
+      "amount_pkr": 198.2
+    },
+    {
+      "name": "Meter rent",
+      "amount_pkr": 42.67
+    },
+    {
+      "name": "Fixed charges",
+      "amount_pkr": 640.0
+    },
+    {
+      "name": "GST",
+      "amount_pkr": 158.56
+    }
+  ],
+  "arrears_pkr": -2.78,
+  "total_payable_by_due_date": 1040.0,
+  "total_payable_after_due_date": 1140.0,
+  "low_confidence_fields": [],
+  "notes": "Gas: units_consumed in HM3 (0.720 MMBTU). Charge values are printed slightly above their labels; mapped by position and checked against current bill 1,039.43. Minimum bill."
+}
