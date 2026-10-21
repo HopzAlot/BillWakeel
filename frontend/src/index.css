@@ -1,0 +1,41 @@
+/* =========================================================
+   BillWakeel global base (index.css)
+   Generic, app-wide defaults only.
+   All BillWakeel-specific design (colours, fonts, layout,
+   components) lives in App.css, which loads after this file.
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  /* App.css sizes text in rem, so this base size is part of the
+     current look: 18px on desktop, 16px on tablet and below. */
+  font-size: 18px;
+  letter-spacing: 0.18px;
+
+  /* The app is dark only: keeps scrollbars and native controls dark. */
+  color-scheme: dark;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 16px;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
