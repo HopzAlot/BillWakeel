@@ -50,7 +50,7 @@ def _max_upload_bytes() -> int:
 
 def _upload_dir() -> Path:
     """Resolve the upload directory relative to the repo root."""
-    repo_root = Path(__file__).resolve().parent.parent
+    repo_root = Path(__file__).resolve().parent.parent.parent
     upload_path = repo_root / settings.upload_dir
     upload_path.mkdir(parents=True, exist_ok=True)
     return upload_path
