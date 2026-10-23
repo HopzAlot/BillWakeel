@@ -1,16 +1,24 @@
-"""Extraction Agent — reads a bill image/PDF and returns structured data.
-
-Stub implementation: returns the example JSON from the shared contract
-(Brief §8.1) so the frontend and API tests can be built against it.
-Rehan will replace this with the real Gemini-based extraction in
-SCRUM-10.
+"""Extraction Agent — reads a bill image/PDF and returns structured data
+via Gemini, grounded by the prompt in prompts/extraction/v1.md.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import base64
+from pathlib import Path
 
-from models.bill import BillExtraction, ChargeLine
+from langchain_core.exceptions import OutputParserException
+from pydantic import ValidationError
+
+from config import settings
+from models.bill import BillExtraction, ExtractionResult
+from services.gemini import get_llm, invoke_with_retry
+
+PROMPT_VERSION = "v1"
+RETRY_ATTEMPTS = 1
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+_PROMPT_PATH = _REPO_ROOT / "prompts" / "extraction" / f"{PROMPT_VERSION}.md"
 
 
 class ExtractionError(Exception):
@@ -18,40 +26,8 @@ class ExtractionError(Exception):
     a valid ``BillExtraction``. Callers map this to HTTP 422."""
 
 
-@dataclass
-class ExtractionResult:
-    """Value object returned by :func:`extract_bill`."""
-
-    extraction: BillExtraction
-    prompt_version: str
-    model: str
-
-
-# ---------------------------------------------------------------------------
-# Example data from the shared contract (Brief §8.1)
-# ---------------------------------------------------------------------------
-_STUB_EXTRACTION = BillExtraction(
-    utility="electricity",
-    provider="K-Electric",
-    billing_month="2026-09",
-    issue_date="2026-09-10",
-    due_date="2026-09-22",
-    tariff_category="A-1",
-    sanctioned_load_kw=3.0,
-    meter_reading_previous=12000,
-    meter_reading_current=12310,
-    units_consumed=310,
-    charges=[
-        ChargeLine(name="Energy charges", amount_pkr=6200.0),
-        ChargeLine(name="Fuel charge adjustment", amount_pkr=410.5),
-        ChargeLine(name="GST", amount_pkr=1150.0),
-    ],
-    arrears_pkr=0,
-    total_payable_by_due_date=8000.0,
-    total_payable_after_due_date=8400.0,
-    low_confidence_fields=["tariff_category"],
-    notes=None,
-)
+def _load_prompt() -> str:
+    return _PROMPT_PATH.read_text()
 
 
 def extract_bill(file_path: str, content_type: str) -> ExtractionResult:
@@ -73,13 +49,42 @@ def extract_bill(file_path: str, content_type: str) -> ExtractionResult:
     Raises
     ------
     ExtractionError
-        If the model output cannot be parsed (not raised by the stub).
+        If the model output cannot be parsed into a valid ``BillExtraction``,
+        even after one retry.
     services.gemini.GeminiError
-        If the model call itself fails (not raised by the stub).
+        If the model call itself fails (bad key, quota, 5xx after retry).
     """
-    # TODO(SCRUM-10): replace stub with real Gemini extraction.
-    return ExtractionResult(
-        extraction=_STUB_EXTRACTION,
-        prompt_version="stub",
-        model="stub",
+    encoded = base64.b64encode(Path(file_path).read_bytes()).decode("ascii")
+    message = {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": _load_prompt()},
+            {"type": "media", "data": encoded, "mime_type": content_type},
+        ],
+    }
+
+    llm = get_llm(temperature=0.0)
+    structured_llm = llm.with_structured_output(BillExtraction)
+
+    last_error: Exception | None = None
+    for attempt in range(RETRY_ATTEMPTS + 1):
+        try:
+            extraction = invoke_with_retry(structured_llm, [message])
+        except (OutputParserException, ValidationError) as e:
+            last_error = e
+            continue
+
+        if not isinstance(extraction, BillExtraction):
+            last_error = ExtractionError(f"Model returned unexpected output: {extraction!r}")
+            continue
+
+        return ExtractionResult(
+            extraction=extraction,
+            prompt_version=PROMPT_VERSION,
+            model=settings.gemini_model,
+        )
+
+    raise ExtractionError(
+        f"Could not parse model output into BillExtraction after "
+        f"{RETRY_ATTEMPTS + 1} attempt(s): {last_error}"
     )
