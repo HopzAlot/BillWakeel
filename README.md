@@ -71,6 +71,37 @@ npm run dev
 ```
 App: http://localhost:5173
 
+## Sprint 1 API endpoints
+
+Interactive docs (Swagger UI): http://localhost:8000/docs
+
+| Method | Path | Purpose | Success | Errors |
+|---|---|---|---|---|
+| `GET` | `/health` | Liveness check | `200` | — |
+| `POST` | `/bills` | Upload a bill (multipart `file`) | `201` | `415` bad type, `413` too large, `400` empty |
+| `POST` | `/bills/{bill_id}/extract` | Run Extraction Agent | `200` | `404`, `502`, `422` |
+| `PUT` | `/bills/{bill_id}/extraction` | Save corrected values | `200` | `404`, `422` |
+
+**Example `curl` commands:**
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Upload a bill (jpg, png, or pdf)
+curl -X POST http://localhost:8000/bills \
+  -F "file=@bill.jpg"
+
+# Run extraction on an uploaded bill
+curl -X POST http://localhost:8000/bills/<bill_id>/extract
+
+# Save corrected extraction values
+curl -X PUT http://localhost:8000/bills/<bill_id>/extraction \
+  -H "Content-Type: application/json" \
+  -d '{"utility":"electricity","provider":"K-Electric","units_consumed":310,"charges":[],"low_confidence_fields":[]}'
+```
+
+
 **Verify the Gemini connection**
 ```bash
 python check_connection.py
