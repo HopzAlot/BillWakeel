@@ -87,6 +87,13 @@ python check_connection.py
 
 Roles rotate every sprint. See `docs/` for the schedule.
 
+## Prompts
+
+Each agent's instructions to Gemini live as a versioned file under
+`prompts/<agent>/vN.md` (e.g. `prompts/extraction/v1.md`). A released version
+is never edited; a change ships as a new version file plus a row in
+`prompts/CHANGELOG.md`. Full convention: [CONTRIBUTING.md](CONTRIBUTING.md#6-prompts-and-engineering-decisions).
+
 ## Project management
 
 - Jira board: https://software-ka-project.atlassian.net/jira/software/projects/SCRUM/boards/1
