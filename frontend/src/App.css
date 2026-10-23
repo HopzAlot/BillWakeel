@@ -364,3 +364,99 @@ a {
     --duration: 0.01ms;
   }
 }
+
+/* ---------- 10. Editable extraction form ---------- */
+.extraction-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.extraction-form h2,
+.extraction-form h3 {
+  margin: 0;
+  color: var(--ivory);
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.extraction-form h2 {
+  font-size: 1.7rem;
+}
+
+.extraction-form h3 {
+  font-size: 1.3rem;
+}
+
+.extraction-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.extraction-field input,
+.extraction-field select,
+.extraction-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ivory);
+  font: inherit;
+}
+
+.extraction-field textarea {
+  resize: vertical;
+}
+
+.extraction-field input:focus,
+.extraction-field select:focus,
+.extraction-field textarea:focus {
+  border-color: var(--sage);
+}
+
+.charges-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.charge-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-2);
+}
+
+.upload-page .secondary-button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--ivory);
+}
+
+.upload-page .secondary-button:hover:not(:disabled) {
+  border-color: var(--sage);
+  background: var(--surface-raised);
+}
+
+@media (max-width: 600px) {
+  .charge-row {
+    grid-template-columns: 1fr;
+  }
+}
+
