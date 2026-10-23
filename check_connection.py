@@ -3,10 +3,13 @@
 """
 
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
 
 from dotenv import load_dotenv
 
-from backend.services.gemini import GeminiError, extract_text, get_llm, invoke_with_retry
+from services.gemini import GeminiError, extract_text, get_llm, invoke_with_retry
 
 
 def main():
