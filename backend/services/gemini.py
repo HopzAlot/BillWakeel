@@ -3,7 +3,6 @@ turns SDK errors into GeminiError. Agents call get_llm() - don't import
 langchain_google_genai or read env vars directly.
 """
 
-import os
 import time
 
 from google.genai.errors import ServerError
@@ -11,7 +10,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 from pydantic import ValidationError
 
-DEFAULT_MODEL = "gemini-3.8-flash"
+from config import settings
+
 RETRY_ATTEMPTS = 1
 RETRY_WAIT_SECONDS = 2
 
@@ -20,24 +20,17 @@ class GeminiError(Exception):
     """Client setup or call failure. Callers map this to an HTTP 502."""
 
 
-def _model_name() -> str:
-    # remove this comment when Baig's config module merges to dev.
-    # TODO(SCRUM-6): switch to config.py once it merges to dev.
-    return os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
-
-
 def get_llm(temperature: float = 0.0) -> ChatGoogleGenerativeAI:
     """Build a Gemini client. Use temperature 0 for extraction (repeatable reads)."""
-    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-    if not api_key:
+    if not settings.google_api_key:
         raise GeminiError(
             "No Gemini API key found. Set GOOGLE_API_KEY in your .env file."
         )
 
     try:
         return ChatGoogleGenerativeAI(
-            model=_model_name(),
-            google_api_key=api_key,
+            model=settings.gemini_model,
+            google_api_key=settings.google_api_key,
             temperature=temperature,
         )
     except ValidationError as e:
