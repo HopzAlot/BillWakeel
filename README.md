@@ -108,3 +108,43 @@ is never edited; a change ships as a new version file plus a row in
 | 2 | 26 Oct – 6 Nov 2026 |
 | 3 | 9 Nov – 20 Nov 2026 |
 | 4 | 23 Nov – 4 Dec 2026 |
+
+**Backend setup (Windows PowerShell)**
+
+Prerequisites: Python 3.11+ and a Google Gemini API key for AI functionality.
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Configure the project-root `.env` file with the following settings:
+
+```dotenv
+GOOGLE_API_KEY=your_google_api_key
+GEMINI_MODEL=gemini-3.8-flash
+FRONTEND_ORIGIN=http://localhost:5173
+MAX_UPLOAD_MB=10
+UPLOAD_DIR=data/uploads
+```
+
+Start the development server from the `backend/` directory:
+
+```powershell
+uvicorn main:app --reload
+```
+
+Health check: http://127.0.0.1:8000/health
+
+API documentation: http://127.0.0.1:8000/docs
+
+Run backend tests:
+
+```powershell
+python -m pytest -q
+```
+
+Do not commit `.env` or any real API keys.
