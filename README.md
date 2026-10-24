@@ -26,20 +26,22 @@ Design rules: arithmetic is done in deterministic Python, never by the LLM; a fi
 - Storage: SQLite with SQLAlchemy, vector store for tariff clauses
 
 ## Repository layout
-
-```
-BillWakeel/
-├── backend/        # FastAPI app: api/, agents/, services/, models/
-├── frontend/       # React (Vite) app
-├── prompts/        # versioned prompts per agent + CHANGELOG.md
-├── data/
-│   ├── tariffs/    # raw/ source documents, structured/ JSON
-│   └── samples/    # anonymised bills and ground-truth labels
-├── tests/          # unit/, integration/, prompt/, eval/
-├── docs/           # roadmap, decisions, DoR/DoD, sprint reviews, eval results
-├── CONTRIBUTING.md
-└── README.md
-```
+backend/
+  agents/
+  api/
+  services/
+  models/
+frontend/
+data/
+  tariffs/
+  samples/
+tests/
+  unit/
+  integration/
+  prompt/
+  eval/
+docs/
+prompts/
 
 ## Getting started
 
@@ -69,6 +71,37 @@ npm run dev
 ```
 App: http://localhost:5173
 
+## Sprint 1 API endpoints
+
+Interactive docs (Swagger UI): http://localhost:8000/docs
+
+| Method | Path | Purpose | Success | Errors |
+|---|---|---|---|---|
+| `GET` | `/health` | Liveness check | `200` | — |
+| `POST` | `/bills` | Upload a bill (multipart `file`) | `201` | `415` bad type, `413` too large, `400` empty |
+| `POST` | `/bills/{bill_id}/extract` | Run Extraction Agent | `200` | `404`, `502`, `422` |
+| `PUT` | `/bills/{bill_id}/extraction` | Save corrected values | `200` | `404`, `422` |
+
+**Example `curl` commands:**
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Upload a bill (jpg, png, or pdf)
+curl -X POST http://localhost:8000/bills \
+  -F "file=@bill.jpg"
+
+# Run extraction on an uploaded bill
+curl -X POST http://localhost:8000/bills/<bill_id>/extract
+
+# Save corrected extraction values
+curl -X PUT http://localhost:8000/bills/<bill_id>/extraction \
+  -H "Content-Type: application/json" \
+  -d '{"utility":"electricity","provider":"K-Electric","units_consumed":310,"charges":[],"low_confidence_fields":[]}'
+```
+
+
 **Verify the Gemini connection**
 ```bash
 python check_connection.py
@@ -85,6 +118,13 @@ python check_connection.py
 
 Roles rotate every sprint. See `docs/` for the schedule.
 
+## Prompts
+
+Each agent's instructions to Gemini live as a versioned file under
+`prompts/<agent>/vN.md` (e.g. `prompts/extraction/v1.md`). A released version
+is never edited; a change ships as a new version file plus a row in
+`prompts/CHANGELOG.md`. Full convention: [CONTRIBUTING.md](CONTRIBUTING.md#6-prompts-and-engineering-decisions).
+
 ## Project management
 
 - Jira board: https://software-ka-project.atlassian.net/jira/software/projects/SCRUM/boards/1
@@ -99,3 +139,43 @@ Roles rotate every sprint. See `docs/` for the schedule.
 | 2 | 26 Oct – 6 Nov 2026 |
 | 3 | 9 Nov – 20 Nov 2026 |
 | 4 | 23 Nov – 4 Dec 2026 |
+
+**Backend setup (Windows PowerShell)**
+
+Prerequisites: Python 3.11+ and a Google Gemini API key for AI functionality.
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Configure the project-root `.env` file with the following settings:
+
+```dotenv
+GOOGLE_API_KEY=your_google_api_key
+GEMINI_MODEL=gemini-3.8-flash
+FRONTEND_ORIGIN=http://localhost:5173
+MAX_UPLOAD_MB=10
+UPLOAD_DIR=data/uploads
+```
+
+Start the development server from the `backend/` directory:
+
+```powershell
+uvicorn main:app --reload
+```
+
+Health check: http://127.0.0.1:8000/health
+
+API documentation: http://127.0.0.1:8000/docs
+
+Run backend tests:
+
+```powershell
+python -m pytest -q
+```
+
+Do not commit `.env` or any real API keys.
