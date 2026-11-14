@@ -13,3 +13,6 @@ No public submission API exists, and a human should own a dispute. The user revi
 
 ## 2026-10-24: Pin Gemini model to gemini-3.5-flash-lite, not gemini-3.8-flash
 Free tier for gemini-3.8-flash is 5 RPM / 20 RPD (confirmed via AI Studio's rate-limit dashboard) — nearly unusable for eval runs across 10 sample bills plus team testing. gemini-3.5-flash-lite has 15 RPM / 500 RPD. Switched locally via .env; backend/config.py's hardcoded default and .env.example still need updating to make this the team-wide default.
+
+## 2026-11-14: Tariff corpus embeddings use a local model, not the Gemini embedding API
+Chunking and embedding the tariff documents (SCRUM-30) could mean many embedding calls, repeated often during development. Calling Gemini for this adds a third rate-limited dependency on top of extraction and grounding, after free-tier limits already caused real problems in Sprint 1. Using a local model (sentence-transformers) instead: free, offline, no rate limit. Gemini is still used for the Grounding Agent's actual reasoning and citation step, just not for embeddings.
