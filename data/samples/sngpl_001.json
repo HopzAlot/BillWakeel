@@ -1,0 +1,39 @@
+{
+  "utility": "gas",
+  "provider": "SNGPL",
+  "billing_month": "2023-06",
+  "issue_date": "2023-07-20",
+  "due_date": "2023-08-03",
+  "tariff_category": "DOMU-B",
+  "sanctioned_load_kw": null,
+  "meter_reading_previous": 3431000,
+  "meter_reading_current": 3469000,
+  "units_consumed": 0.389,
+  "charges": [
+    {
+      "name": "Gas charges",
+      "amount_pkr": 336.45
+    },
+    {
+      "name": "Meter rent",
+      "amount_pkr": 41.33
+    },
+    {
+      "name": "Fixed charges",
+      "amount_pkr": 475.34
+    },
+    {
+      "name": "GST",
+      "amount_pkr": 153.56
+    },
+    {
+      "name": "Rebate / Adjustment",
+      "amount_pkr": 1102.1
+    }
+  ],
+  "arrears_pkr": 2.61,
+  "total_payable_by_due_date": 2110.0,
+  "total_payable_after_due_date": 2320.0,
+  "low_confidence_fields": [],
+  "notes": "Gas: units_consumed is gas consumed in HM3 (1.440 MMBTU). Readings as printed. Current bill 2,108.78; Rebate/Adjustment is an arrears installment."
+}

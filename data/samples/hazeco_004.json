@@ -1,0 +1,55 @@
+{
+  "utility": "electricity",
+  "provider": "HAZECO",
+  "billing_month": "2026-07",
+  "issue_date": "2026-07-08",
+  "due_date": "2026-07-22",
+  "tariff_category": "A-1a(01)",
+  "sanctioned_load_kw": 1.0,
+  "meter_reading_previous": 22863,
+  "meter_reading_current": 22977,
+  "units_consumed": 114,
+  "charges": [
+    {
+      "name": "Cost of electricity",
+      "amount_pkr": 1236.0
+    },
+    {
+      "name": "Fixed charges",
+      "amount_pkr": 300.0
+    },
+    {
+      "name": "Fuel price adjustment",
+      "amount_pkr": 12.0
+    },
+    {
+      "name": "F.C. surcharge",
+      "amount_pkr": 49.0
+    },
+    {
+      "name": "Quarterly tariff adjustment",
+      "amount_pkr": -226.0
+    },
+    {
+      "name": "Electricity duty",
+      "amount_pkr": 15.0
+    },
+    {
+      "name": "GST",
+      "amount_pkr": 247.0
+    },
+    {
+      "name": "GST on FPA",
+      "amount_pkr": 3.0
+    },
+    {
+      "name": "ED on FPA",
+      "amount_pkr": 0.0
+    }
+  ],
+  "arrears_pkr": null,
+  "total_payable_by_due_date": 1637.0,
+  "total_payable_after_due_date": 1705.0,
+  "low_confidence_fields": [],
+  "notes": "Current bill 1,621 + total FPA 16. After-due 1,705 till 27-Jul-26, 1,773 after."
+}

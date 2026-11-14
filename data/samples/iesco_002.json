@@ -1,0 +1,55 @@
+{
+  "utility": "electricity",
+  "provider": "IESCO",
+  "billing_month": "2026-07",
+  "issue_date": "2026-07-10",
+  "due_date": "2026-07-24",
+  "tariff_category": "A-1a(01)",
+  "sanctioned_load_kw": 1.0,
+  "meter_reading_previous": 34052,
+  "meter_reading_current": 34375,
+  "units_consumed": 323,
+  "charges": [
+    {
+      "name": "Cost of electricity",
+      "amount_pkr": 11776.58
+    },
+    {
+      "name": "Fixed charges",
+      "amount_pkr": 400.0
+    },
+    {
+      "name": "Fuel price adjustment",
+      "amount_pkr": 73.0
+    },
+    {
+      "name": "F.C surcharge",
+      "amount_pkr": 1043.29
+    },
+    {
+      "name": "Qtr tariff adjustment",
+      "amount_pkr": -641.38
+    },
+    {
+      "name": "E.D.",
+      "amount_pkr": 167.03
+    },
+    {
+      "name": "GST",
+      "amount_pkr": 2294.0
+    },
+    {
+      "name": "GST on FPA",
+      "amount_pkr": 14.0
+    },
+    {
+      "name": "ED on FPA",
+      "amount_pkr": 1.1
+    }
+  ],
+  "arrears_pkr": null,
+  "total_payable_by_due_date": 15128.0,
+  "total_payable_after_due_date": 15757.0,
+  "low_confidence_fields": [],
+  "notes": "Current bill 15,040 + total FPA 88. After-due 15,757 till 27-Jul-26, 16,386 after."
+}
