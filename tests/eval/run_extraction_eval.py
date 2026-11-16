@@ -1,16 +1,18 @@
-"""Evaluation harness for the Extraction Agent (SCRUM-10).
+"""Evaluation harness for the Extraction Agent (SCRUM-10, extended for gas in SCRUM-32).
 
 Run from the repo root:
-    python tests/eval/run_extraction_eval.py
+    python tests/eval/run_extraction_eval.py                  # electricity only (default)
+    python tests/eval/run_extraction_eval.py --utility gas    # SNGPL gas samples only
+    python tests/eval/run_extraction_eval.py --utility all    # every sample
 
-Calls extract_bill() on every electricity sample in data/samples/ and
-compares the result against its ground-truth JSON. Gas bills are out of
-scope for this pass (fractional HM3 units need separate handling).
+Calls extract_bill() on every sample of the chosen utility in data/samples/
+and compares the result against its ground-truth JSON.
 
 Saves a dated results file to docs/eval/ with the prompt version and
 model used, per CONTRIBUTING.md section 6.
 """
 
+import argparse
 import json
 import sys
 from datetime import date
@@ -31,6 +33,10 @@ RESULTS_DIR = REPO_ROOT / "docs" / "eval"
 
 AMOUNT_TOLERANCE_PKR = 2
 UNITS_TOLERANCE = 1
+# Gas units are fractional HM3 printed to 3 decimals (e.g. 0.389), so a
+# tolerance of 1 would accept almost any answer. Allow one unit in the last
+# printed decimal place instead.
+GAS_UNITS_TOLERANCE_HM3 = 0.001
 LOAD_TOLERANCE_KW = 0.1
 
 _EXT_TO_CONTENT_TYPE = {
@@ -60,7 +66,9 @@ FIELDS_CHECKED = [
 def _numbers_close(actual, expected, tolerance):
     if actual is None or expected is None:
         return actual == expected
-    return abs(actual - expected) <= tolerance
+    # Small epsilon so float noise (0.390 - 0.389 = 0.0010000000000000009)
+    # does not fail a value that is exactly on the tolerance.
+    return abs(actual - expected) <= tolerance + 1e-9
 
 
 def _provider_matches(actual, expected):
@@ -70,11 +78,13 @@ def _provider_matches(actual, expected):
     return a in e or e in a
 
 
-def _field_matches(field, actual, expected):
+def _field_matches(field, actual, expected, utility):
     if field == "provider":
         return _provider_matches(actual, expected)
     if field == "sanctioned_load_kw":
         return _numbers_close(actual, expected, LOAD_TOLERANCE_KW)
+    if field == "units_consumed" and utility == "gas":
+        return _numbers_close(actual, expected, GAS_UNITS_TOLERANCE_HM3)
     if field in ("meter_reading_previous", "meter_reading_current", "units_consumed"):
         return _numbers_close(actual, expected, UNITS_TOLERANCE)
     if field in ("total_payable_by_due_date", "total_payable_after_due_date"):
@@ -82,11 +92,13 @@ def _field_matches(field, actual, expected):
     return actual == expected
 
 
-def _load_electricity_samples():
+def _load_samples(utility):
+    """Return (name, image_path, ground_truth) for every sample of ``utility``
+    ("electricity", "gas" or "all")."""
     samples = []
     for json_path in sorted(SAMPLES_DIR.glob("*.json")):
         ground_truth = json.loads(json_path.read_text())
-        if ground_truth.get("utility") != "electricity":
+        if utility != "all" and ground_truth.get("utility") != utility:
             continue
         image_path = next(
             (
@@ -103,9 +115,18 @@ def _load_electricity_samples():
 
 
 def main():
-    samples = _load_electricity_samples()
+    parser = argparse.ArgumentParser(description="Run the extraction eval on sample bills.")
+    parser.add_argument(
+        "--utility",
+        choices=["electricity", "gas", "all"],
+        default="electricity",
+        help="which samples to evaluate (default: electricity)",
+    )
+    utility = parser.parse_args().utility
+
+    samples = _load_samples(utility)
     if not samples:
-        print("No electricity samples found in data/samples/.")
+        print(f"No {utility} samples found in data/samples/.")
         return
 
     field_hits = {f: 0 for f in FIELDS_CHECKED}
@@ -133,7 +154,9 @@ def main():
         misses = []
         for field in FIELDS_CHECKED:
             field_total[field] += 1
-            if _field_matches(field, extraction.get(field), ground_truth.get(field)):
+            if _field_matches(
+                field, extraction.get(field), ground_truth.get(field), ground_truth.get("utility")
+            ):
                 field_hits[field] += 1
             else:
                 misses.append(
@@ -155,12 +178,12 @@ def main():
         field_lines.append(f"- {field}: {pct}")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    results_path = RESULTS_DIR / f"{date.today().isoformat()}-extraction-electricity.md"
+    results_path = RESULTS_DIR / f"{date.today().isoformat()}-extraction-{utility}.md"
     results_path.write_text(
         f"# Extraction eval — {date.today().isoformat()}\n\n"
         f"Prompt version: {prompt_version}\n"
         f"Model: {model_name}\n"
-        f"Scope: electricity samples only ({total} bills)\n\n"
+        f"Scope: {utility} samples ({total} bills)\n\n"
         f"## Result\n\n{schema_valid}/{total} schema-valid\n\n"
         f"## Per-sample\n\n" + "\n".join(per_sample_lines) + "\n\n"
         f"## Per-field accuracy\n\n" + "\n".join(field_lines) + "\n"
