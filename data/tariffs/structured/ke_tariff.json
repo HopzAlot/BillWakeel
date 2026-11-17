@@ -1,0 +1,23 @@
+
+{
+  "disco": "K-Electric",
+  "tariff_category": "DUMMY-CATEGORY",
+  "effective_from": "2000-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 0
+    }
+  ],
+  "fixed_charge_pkr": 0,
+  "adjustments": [],
+  "taxes": [],
+  "source": {
+    "url": "https://example.com/placeholder",
+    "retrieved_on": "2000-01-01",
+    "document_name": "PLACEHOLDER - NOT AN OFFICIAL TARIFF",
+    "clause": null
+  }
+}
