@@ -108,6 +108,7 @@ def test_ke_tariff_json_structure():
         / "data"
         / "tariffs"
         / "structured"
+        / "k_electric"
         / "ke_tariff.json"
     )
 
