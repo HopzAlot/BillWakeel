@@ -8,6 +8,7 @@ class TariffSlab(BaseModel):
     min_units: float = Field(ge=0)
     max_units: float | None = Field(default=None, gt=0)
     rate_per_unit_pkr: float = Field(ge=0)
+    fixed_charge_pkr_per_kw: float | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def validate_slab_range(self):
@@ -38,6 +39,8 @@ class TariffSource(BaseModel):
 class TariffSchedule(BaseModel):
     disco: str
     tariff_category: str
+    billing_method: Literal["telescopic", "non_telescopic"] | None = None
+    consumer_status: Literal["protected", "unprotected"] | None = None
     effective_from: date
     effective_to: date | None = None
     slabs: list[TariffSlab] = Field(min_length=1)
