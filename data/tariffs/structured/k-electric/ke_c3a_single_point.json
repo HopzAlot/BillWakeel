@@ -1,0 +1,50 @@
+{
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "C-3(a)",
+  "tariff_category": "Bulk Supply",
+  "consumer_status": null,
+  "billing_method": "flat",
+  "metering_type": "regular",
+  "min_sanctioned_load_kw": 0,
+  "max_sanctioned_load_kw": 5000,
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 40.77,
+      "time_period": "all"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "per_kw_max_25_percent_load_or_mdi",
+    "rate_pkr": 1250
+  },
+  "minimum_monthly_charge_pkr": null,
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 2.0,
+      "basis": "Base energy charges only"
+    }
+  ],
+  "source": {
+    "url": "https://ke.com.pk/customer-services/tariff-structure",
+    "retrieved_on": "2026-11-21",
+    "document_name": "Pakistan Electricity and Gas Tariffs Complete Guide 2026 (secondary compilation; official verification pending)",
+    "clause": "C-3(a) Bulk Supply at 132 kV and above, up to 5000 kW; Calendar Year 2026"
+  }
+}

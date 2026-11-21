@@ -1,0 +1,55 @@
+{
+  "discos": [
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "D-1(b)",
+  "tariff_category": "Agricultural",
+  "consumer_status": null,
+  "billing_method": "flat",
+  "metering_type": "tou",
+  "min_sanctioned_load_kw": 5,
+  "max_sanctioned_load_kw": null,
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 42.79,
+      "time_period": "peak"
+    },
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 34.71,
+      "time_period": "off_peak"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "per_kw_sanctioned_load",
+    "rate_pkr": 400
+  },
+  "minimum_monthly_charge_pkr": null,
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.0,
+      "basis": "Base energy charges only"
+    }
+  ],
+  "source": {
+    "url": "https://ke.com.pk/customer-services/tariff-structure",
+    "retrieved_on": "2026-11-21",
+    "document_name": "Pakistan Electricity and Gas Tariffs Complete Guide 2026 (secondary compilation; official verification pending)",
+    "clause": "D-1(b) SCARP TOU, 5 kW and above; Calendar Year 2026"
+  }
+}

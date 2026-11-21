@@ -1,0 +1,41 @@
+{
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "F",
+  "tariff_category": "Seasonal Industrial Supply",
+  "derived_from_tariff_code": "B-series applicable tariff",
+  "billing_method": "flat",
+  "metering_type": "regular",
+  "effective_from": "2026-01-01",
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_multiplier": 1.25,
+      "time_period": "all"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "derived_from_base_tariff",
+    "rate_pkr": 0,
+    "rate_multiplier": 1.25
+  },
+  "source": {
+    "url": "https://ke.com.pk/customer-services/tariff-structure",
+    "retrieved_on": "2026-11-21",
+    "document_name": "K-Electric Tariff Extract 2026 (Baig, SCRUM-27)",
+    "clause": "Tariff F ? Seasonal Industrial Supply"
+  },
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    }
+  ]
+}

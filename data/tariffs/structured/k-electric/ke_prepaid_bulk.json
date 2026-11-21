@@ -1,0 +1,44 @@
+{
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "Prepaid Bulk",
+  "tariff_category": "Bulk Supply",
+  "consumer_status": null,
+  "billing_method": "flat",
+  "metering_type": "prepaid",
+  "min_sanctioned_load_kw": null,
+  "max_sanctioned_load_kw": null,
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 35.72,
+      "time_period": "all"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "per_kw_max_25_percent_load_or_mdi",
+    "rate_pkr": 1250
+  },
+  "minimum_monthly_charge_pkr": null,
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    }
+  ],
+  "source": {
+    "url": "https://www.nepra.org.pk/tariff/Tariff/Ex-WAPDA%20DISCOS/2026/TRF-100%20XWDISCOS%20AND%20KE%20RATIONALIZATION%20OF%20TARIFF%2011-02-2026%202935-57.pdf",
+    "retrieved_on": "2026-11-22",
+    "document_name": "NEPRA Decision: Rationalization of Tariff (XWDISCOs and K-Electric), dated 2026-02-11",
+    "clause": "Annex-A, C - Single-Point Supply, Pre-Paid Bulk Supply Tariff"
+  }
+}

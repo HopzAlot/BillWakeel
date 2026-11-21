@@ -1,23 +1,60 @@
-
 {
-  "disco": "K-Electric",
-  "tariff_category": "DUMMY-CATEGORY",
-  "effective_from": "2000-01-01",
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "A-1(a)",
+  "tariff_category": "Domestic",
+  "consumer_status": "protected",
+  "billing_method": "telescopic",
+  "metering_type": "regular",
+  "min_sanctioned_load_kw": 0,
+  "max_sanctioned_load_kw": 5,
+  "effective_from": "2026-01-01",
   "effective_to": null,
   "slabs": [
     {
       "min_units": 0,
-      "max_units": null,
-      "rate_per_unit_pkr": 0
+      "max_units": 100,
+      "rate_per_unit_pkr": 10.54,
+      "time_period": "all",
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 200
+      }
+    },
+    {
+      "min_units": 100,
+      "max_units": 200,
+      "rate_per_unit_pkr": 13.01,
+      "time_period": "all",
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 300
+      }
     }
   ],
-  "fixed_charge_pkr": 0,
+  "minimum_monthly_charge_pkr": null,
   "adjustments": [],
-  "taxes": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.5,
+      "basis": "Base energy charges only"
+    }
+  ],
   "source": {
-    "url": "https://example.com/placeholder",
-    "retrieved_on": "2000-01-01",
-    "document_name": "PLACEHOLDER - NOT AN OFFICIAL TARIFF",
-    "clause": null
+    "url": "https://ke.com.pk/customer-services/tariff-structure",
+    "retrieved_on": "2026-11-21",
+    "document_name": "Pakistan Electricity and Gas Tariffs Complete Guide 2026 (secondary compilation; official verification pending)",
+    "clause": "A-1(a) Domestic Protected; Calendar Year 2026"
   }
 }
