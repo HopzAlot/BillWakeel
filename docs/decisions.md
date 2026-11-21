@@ -22,3 +22,17 @@ Prompt v1 already reads every gas-specific field correctly (4/4 schema-valid, se
 docs/eval/2026-11-16-extraction-gas.md), so no v2 was written. Rejected: adding a new
 electricity DISCO layout (no samples yet), and a v2 prompt only to fix provider names
 (not a gas-layout problem and it would also change electricity results).
+
+## 2026-11-21: Recalculation engine takes the slab method as an argument; provisional Rs. 1 tolerance (SCRUM-29)
+backend/services/tariff_engine.py recalculates a bill from a TariffSchedule in plain Python:
+energy through the slabs, then the fixed charge, then per-unit FCA/FPA/QTA, then taxes. The
+SCRUM-28 schema does not say whether slabs are telescopic (protected consumers, each slab bills
+its own units) or landing (unprotected consumers, all units at the rate of the slab the total
+lands in), so the engine takes slab_method as a parameter, defaulting to telescopic, instead of
+changing the shared schema this sprint. Percentage taxes must name one of three bases
+(energy_charge, fixed_charge, subtotal); any other basis raises an error instead of being
+guessed. A recalculated total within Rs. 1 of the billed total counts as a match; this is
+provisional until real tariff JSON replaces the K-Electric placeholder. Rejected: adding a
+slab_method field to TariffSchedule now (needs whole-team agreement), and Decimal arithmetic
+(rounding every line to paisa is enough at bill scale).
+                                                  
