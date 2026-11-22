@@ -1,0 +1,56 @@
+{
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "D-2(b)",
+  "tariff_category": "Agricultural",
+  "consumer_status": null,
+  "billing_method": "flat",
+  "metering_type": "tou",
+  "min_sanctioned_load_kw": 5,
+  "max_sanctioned_load_kw": null,
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 29.54,
+      "time_period": "peak"
+    },
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 28.69,
+      "time_period": "off_peak"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "per_kw_sanctioned_load",
+    "rate_pkr": 400
+  },
+  "minimum_monthly_charge_pkr": null,
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.0,
+      "basis": "Base energy charges only"
+    }
+  ],
+  "source": {
+    "url": "https://www.nepra.org.pk/tariff/Tariff/Ex-WAPDA%20DISCOS/2026/TRF-100%20XWDISCOS%20AND%20KE%20RATIONALIZATION%20OF%20TARIFF%2011-02-2026%202935-57.pdf",
+    "retrieved_on": "2026-11-21",
+    "document_name": "NEPRA Decision: Rationalization of Tariff (XWDISCOs and K-Electric), dated 2026-02-11",
+    "clause": "Annex-C ? D-2 Agricultural Tube Wells TOU"
+  }
+}

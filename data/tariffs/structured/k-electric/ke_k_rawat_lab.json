@@ -1,0 +1,37 @@
+{
+  "discos": [
+    "IESCO"
+  ],
+  "tariff_code": "K",
+  "tariff_category": "Rawat Lab",
+  "billing_method": "flat",
+  "metering_type": "regular",
+  "effective_from": "2026-01-01",
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 33.75,
+      "time_period": "all"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "per_consumer",
+    "rate_pkr": 2000
+  },
+  "source": {
+    "url": "https://ke.com.pk/customer-services/tariff-structure",
+    "retrieved_on": "2026-11-21",
+    "document_name": "K-Electric Tariff Extract 2026 (Baig, SCRUM-27)",
+    "clause": "Tariff K ? Rawat Lab"
+  },
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+    }
+  ]
+}
