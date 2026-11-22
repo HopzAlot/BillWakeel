@@ -23,16 +23,16 @@ docs/eval/2026-11-16-extraction-gas.md), so no v2 was written. Rejected: adding 
 electricity DISCO layout (no samples yet), and a v2 prompt only to fix provider names
 (not a gas-layout problem and it would also change electricity results).
 
-## 2026-11-21: Recalculation engine takes the slab method as an argument; provisional Rs. 1 tolerance (SCRUM-29)
-backend/services/tariff_engine.py recalculates a bill from a TariffSchedule in plain Python:
-energy through the slabs, then the fixed charge, then per-unit FCA/FPA/QTA, then taxes. The
-SCRUM-28 schema does not say whether slabs are telescopic (protected consumers, each slab bills
-its own units) or landing (unprotected consumers, all units at the rate of the slab the total
-lands in), so the engine takes slab_method as a parameter, defaulting to telescopic, instead of
-changing the shared schema this sprint. Percentage taxes must name one of three bases
-(energy_charge, fixed_charge, subtotal); any other basis raises an error instead of being
-guessed. A recalculated total within Rs. 1 of the billed total counts as a match; this is
-provisional until real tariff JSON replaces the K-Electric placeholder. Rejected: adding a
-slab_method field to TariffSchedule now (needs whole-team agreement), and Decimal arithmetic
-(rounding every line to paisa is enough at bill scale).
-                                                  
+## 2026-11-22: Recalculation engine follows the extended tariff schema; provisional Rs. 1 tolerance (SCRUM-29)
+backend/services/tariff_engine.py recalculates a bill from a TariffSchedule and a
+TariffCalculationInput (SCRUM-28) in plain Python: energy through the slabs using the
+schedule's billing_method (TOU tariffs price peak and off-peak units separately), then the fixed
+charge (a slab's own fixed charge overrides the schedule's), a minimum-charge top-up only when no
+fixed charge applies, per-unit adjustments, then taxes. Tax bases are looked up in a fixed table
+that includes the exact wording used in the tariff files; any other basis raises an error instead
+of being guessed. Tariffs that only publish a rate range, or are derived from another tariff
+(rate_multiplier, derived_from_base_tariff), also raise an error rather than giving an
+approximate total. A sanctioned load outside the tariff's range is returned as a warning, not an
+error, because some load limits in the data still need checking. A recalculated total within
+Rs. 1 of the billed total counts as a match; provisional until real bills are checked. Rejected:
+Decimal arithmetic (rounding every line to paisa is enough at bill scale).
