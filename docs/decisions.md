@@ -22,3 +22,17 @@ Prompt v1 already reads every gas-specific field correctly (4/4 schema-valid, se
 docs/eval/2026-11-16-extraction-gas.md), so no v2 was written. Rejected: adding a new
 electricity DISCO layout (no samples yet), and a v2 prompt only to fix provider names
 (not a gas-layout problem and it would also change electricity results).
+
+## 2026-11-22: Recalculation engine follows the extended tariff schema; provisional Rs. 1 tolerance (SCRUM-29)
+backend/services/tariff_engine.py recalculates a bill from a TariffSchedule and a
+TariffCalculationInput (SCRUM-28) in plain Python: energy through the slabs using the
+schedule's billing_method (TOU tariffs price peak and off-peak units separately), then the fixed
+charge (a slab's own fixed charge overrides the schedule's), a minimum-charge top-up only when no
+fixed charge applies, per-unit adjustments, then taxes. Tax bases are looked up in a fixed table
+that includes the exact wording used in the tariff files; any other basis raises an error instead
+of being guessed. Tariffs that only publish a rate range, or are derived from another tariff
+(rate_multiplier, derived_from_base_tariff), also raise an error rather than giving an
+approximate total. A sanctioned load outside the tariff's range is returned as a warning, not an
+error, because some load limits in the data still need checking. A recalculated total within
+Rs. 1 of the billed total counts as a match; provisional until real bills are checked. Rejected:
+Decimal arithmetic (rounding every line to paisa is enough at bill scale).
