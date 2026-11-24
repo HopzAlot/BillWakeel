@@ -71,11 +71,14 @@ def test_findings_for_unsupported_disco_is_422():
 
 
 def test_findings_catches_a_seeded_gst_error_end_to_end():
+    # 351.27 is the exact engine value as of 2026-11-25 (after SCRUM-31
+    # added the real Quarterly Tariff Adjustment to the tariff JSON, which
+    # changed the base GST is a percentage of).
     body = {
         **_KE_A1A_BASE,
         "charges": [
             *_KE_A1A_BASE["charges"],
-            {"name": "GST", "amount_pkr": 403.1 + 500},  # seeded error
+            {"name": "GST", "amount_pkr": 351.27 + 500},  # seeded error
         ],
     }
     bill_id = _upload_and_set_extraction(body)
@@ -97,7 +100,7 @@ def test_findings_for_clean_bill_is_empty():
         **_KE_A1A_BASE,
         "charges": [
             *_KE_A1A_BASE["charges"],
-            {"name": "GST", "amount_pkr": 403.1},  # exact engine value
+            {"name": "GST", "amount_pkr": 351.27},  # exact engine value
         ],
     }
     bill_id = _upload_and_set_extraction(body)

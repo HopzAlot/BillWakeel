@@ -7,6 +7,12 @@ The seeded-error bill is K-Electric, A-1(a) protected, 145 units,
 `calculate_bill`), with exactly one charge (GST) deliberately inflated by
 Rs. 500. Every other charge matches the engine exactly, so a false
 positive on those would be a real bug, not noise.
+
+Numbers recomputed 2026-11-25 after adding the real Quarterly Tariff
+Adjustment (QTA) to the K-Electric tariff JSON (SCRUM-31, sourced from the
+official Gazette SRO — see data/tariffs/raw/sources.md S07): the QTA now
+changes energy+fixed+adjustments, which GST is a percentage of, so GST's
+expected value moved from 403.10 to 351.27.
 """
 
 import pytest
@@ -50,7 +56,11 @@ def no_network_gemini(monkeypatch):
     monkeypatch.setattr("agents.grounding.get_llm", _raise)
 
 
-def _clean_extraction(gst_amount_pkr: float) -> BillExtraction:
+EXACT_GST_PKR = 351.27
+EXACT_QTA_PKR = -287.93
+
+
+def _clean_extraction(gst_amount_pkr: float = EXACT_GST_PKR, qta_amount_pkr: float = EXACT_QTA_PKR) -> BillExtraction:
     return BillExtraction(
         utility="electricity",
         provider="K-Electric",
@@ -62,8 +72,10 @@ def _clean_extraction(gst_amount_pkr: float) -> BillExtraction:
             ChargeLine(name="Fixed charges", amount_pkr=600.0),
             ChargeLine(name="Electricity duty", amount_pkr=24.59),
             ChargeLine(name="GST", amount_pkr=gst_amount_pkr),
-            # No engine counterpart yet (SCRUM-28 doesn't model adjustments
-            # yet) — must never produce a finding.
+            ChargeLine(name="Qtr tariff adjustment", amount_pkr=qta_amount_pkr),
+            # Still no engine counterpart (FCA/FPA changes monthly, no
+            # single rate exists to model it against) — must never
+            # produce a finding.
             ChargeLine(name="Fuel price adjustment", amount_pkr=71.0),
         ],
         total_payable_by_due_date=2485.0,
@@ -72,7 +84,7 @@ def _clean_extraction(gst_amount_pkr: float) -> BillExtraction:
 
 
 def test_clean_bill_produces_no_findings(ke_a1a_calculation):
-    extraction = _clean_extraction(gst_amount_pkr=403.1)  # exact engine value
+    extraction = _clean_extraction()  # exact engine values
 
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)
 
@@ -81,15 +93,15 @@ def test_clean_bill_produces_no_findings(ke_a1a_calculation):
 
 
 def test_seeded_gst_error_is_caught_with_a_real_citation(ke_a1a_calculation):
-    extraction = _clean_extraction(gst_amount_pkr=403.1 + 500)  # seeded error
+    extraction = _clean_extraction(gst_amount_pkr=EXACT_GST_PKR + 500)  # seeded error
 
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)
 
     assert len(response.findings) == 1
     finding = response.findings[0]
     assert finding.charge_name == "GST"
-    assert finding.billed_amount_pkr == pytest.approx(903.1)
-    assert finding.expected_amount_pkr == pytest.approx(403.1)
+    assert finding.billed_amount_pkr == pytest.approx(EXACT_GST_PKR + 500)
+    assert finding.expected_amount_pkr == pytest.approx(EXACT_GST_PKR)
     assert finding.difference_pkr == pytest.approx(500.0)
     assert finding.clause_id.startswith("KE-")
     assert finding.clause_text  # a real retrieved clause, not empty
@@ -98,8 +110,24 @@ def test_seeded_gst_error_is_caught_with_a_real_citation(ke_a1a_calculation):
     assert finding.confidence in {"high", "medium", "low"}
 
 
+def test_seeded_qta_error_is_caught_with_a_real_citation(ke_a1a_calculation):
+    # QTA (sourced from the official Gazette SRO, SCRUM-31 2026-11-25) is
+    # now a real engine component — a bill using the wrong quarter's rate
+    # must be caught the same way a wrong GST would be.
+    extraction = _clean_extraction(qta_amount_pkr=EXACT_QTA_PKR + 100)  # seeded error
+
+    response = ground_bill("bill-1", extraction, ke_a1a_calculation)
+
+    matches = [f for f in response.findings if f.charge_name == "Qtr tariff adjustment"]
+    assert len(matches) == 1
+    finding = matches[0]
+    assert finding.expected_amount_pkr == pytest.approx(EXACT_QTA_PKR)
+    assert finding.difference_pkr == pytest.approx(100.0)
+    assert finding.clause_text
+
+
 def test_small_difference_within_tolerance_is_not_a_finding(ke_a1a_calculation):
-    extraction = _clean_extraction(gst_amount_pkr=403.1 + TOLERANCE_PKR / 2)
+    extraction = _clean_extraction(gst_amount_pkr=EXACT_GST_PKR + TOLERANCE_PKR / 2)
 
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)
 
@@ -107,10 +135,11 @@ def test_small_difference_within_tolerance_is_not_a_finding(ke_a1a_calculation):
 
 
 def test_unmatched_charge_lines_are_never_flagged(ke_a1a_calculation):
-    # Fuel price adjustment has no engine counterpart (SCRUM-28 gap) even
-    # though its billed amount (71.0) differs wildly from zero — the agent
-    # must not invent an expected amount to compare it to.
-    extraction = _clean_extraction(gst_amount_pkr=403.1)
+    # Fuel price adjustment still has no engine counterpart (it changes
+    # monthly; there's no single rate to record) even though its billed
+    # amount (71.0) differs wildly from zero — the agent must not invent
+    # an expected amount to compare it to.
+    extraction = _clean_extraction()
 
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)
 
@@ -129,7 +158,7 @@ def test_weak_citation_drops_the_finding_even_past_tolerance(ke_a1a_calculation,
         lambda query, disco, top_k=3: [ChunkResult(chunk=weak_chunk, score=0.05)],
     )
 
-    extraction = _clean_extraction(gst_amount_pkr=403.1 + 500)
+    extraction = _clean_extraction(gst_amount_pkr=EXACT_GST_PKR + 500)
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)
 
     assert response.findings == []

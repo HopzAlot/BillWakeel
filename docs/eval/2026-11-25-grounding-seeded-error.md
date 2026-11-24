@@ -10,5 +10,5 @@ PASS: 1 finding(s), expected exactly 1 (GST)
 
 ## Findings
 
-- GST: billed Rs. 903.1, expected Rs. 403.1, diff Rs. 500.0, clause KE-3-6 (medium confidence)
-  Explanation: The GST billed amount of Rs. 903.10 differs from the expected amount of Rs. 403.10, which should be calculated using the standard statutory rate of 18% applied to the specified billing components under the Sales Tax Act 1990, with exemptions for lifeline domestic consumers.
+- GST: billed Rs. 851.27, expected Rs. 351.27, diff Rs. 500.0, clause KE-3-6 (medium confidence)
+  Explanation: The billed General Sales Tax of Rs. 851.27 differs from the expected amount of Rs. 351.27, which is calculated using the standard statutory rate of 18% applied to the specified tariff components under the Sales Tax Act 1990.

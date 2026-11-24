@@ -5,11 +5,16 @@ clause (SCRUM-30). A discrepancy with no verifiable clause is dropped
 before the LLM ever sees it — citation verification is a gate in code,
 not a prompt instruction the model could ignore.
 
-Known gap, not a bug: the structured tariff JSON (SCRUM-28) currently has
-no DISCO with populated `adjustments` (FCA/FPA, QTA, FC/NJ surcharges are
-still "TO DOWNLOAD" per data/tariffs/raw/sources.md). Bill charge lines
-for those — and compound lines like "GST on FPA" — have no engine
-counterpart yet, so `_match_component` leaves them unmatched and this
+Known gap, not a bug: as of 2026-11-25 only K-Electric's Quarterly Tariff
+Adjustment (QTA) is modeled in `adjustments` (sourced from the official
+Gazette SRO, see data/tariffs/raw/sources.md S07) — and only for non-
+lifeline, non-prepaid K-Electric consumers, and only correct for bills
+from June-August 2026, since `TariffAdjustment` has no effective-date
+fields and the engine isn't given a billing period to check one against.
+FCA/FPA (changes monthly, no single rate to record) and the FC/NJ
+surcharges (slab-dependent, published as ranges) still have no engine
+counterpart anywhere. Bill charge lines for those — and compound lines
+like "GST on FPA" — are left unmatched by `_match_component`, so this
 agent correctly produces no finding for them, rather than guessing.
 """
 
@@ -61,7 +66,31 @@ _CHARGE_NAME_ALIASES: dict[str, str] = {
     "gst": "gst",
     "general sales tax": "gst",
     "sales tax": "gst",
+    "quarterly tariff adjustment": "qta",
+    "qtr tariff adjustment": "qta",
+    "qta": "qta",
 }
+
+# A tax/adjustment's own name in the tariff JSON sometimes carries a long
+# caveat suffix (e.g. the QTA entry is deliberately named "... - valid
+# Jun-Aug 2026 only" so the time limit is visible everywhere it's quoted,
+# not just in docs). Slugging that whole string would give it an unstable,
+# unmatchable key, so its OWN canonical key is resolved by keyword, not by
+# exact phrase — unlike _CHARGE_NAME_ALIASES above, which must stay exact
+# (a bill's "GST" and "GST on FPA" are different charges and must never
+# collide into the same key).
+_ADJUSTMENT_KEY_KEYWORDS: list[tuple[str, str]] = [
+    ("quarterly tariff adjustment", "qta"),
+    ("qta", "qta"),
+]
+
+
+def _canonical_component_key(name: str) -> str:
+    normalized = _normalize_charge_name(name)
+    for keyword, key in _ADJUSTMENT_KEY_KEYWORDS:
+        if keyword in normalized:
+            return key
+    return _slug(name)
 
 
 def _load_prompt() -> str:
@@ -88,7 +117,7 @@ def _expected_components(calculation: BillCalculation) -> dict[str, tuple[str, f
         "fixed": ("Fixed charges", calculation.fixed_charge_pkr),
     }
     for item in (*calculation.adjustments, *calculation.taxes):
-        components[_slug(item.name)] = (item.name, item.amount_pkr)
+        components[_canonical_component_key(item.name)] = (item.name, item.amount_pkr)
     return components
 
 
@@ -97,7 +126,7 @@ def _match_component(
 ) -> tuple[str, float] | None:
     """Find the engine component a bill charge line is about, if any.
 
-    Returns None for a charge the engine doesn't model yet (FPA, QTA,
+    Returns None for a charge the engine doesn't model yet (FPA, FC/NJ
     surcharges, "GST on FPA" style compound lines) rather than guessing —
     there's no deterministic expected amount to compare against.
     """

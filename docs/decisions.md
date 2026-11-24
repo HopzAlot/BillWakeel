@@ -41,11 +41,11 @@ Decimal arithmetic (rounding every line to paisa is enough at bill scale).
 `ground_bill()` matches each printed charge line to the one engine-computed component it's about
 (energy, fixed charge, or a named tax/adjustment), by exact alias after normalizing punctuation —
 not fuzzy/substring matching, because "GST" and "GST on FPA" must never match the same component.
-A charge the engine doesn't model yet (FCA/FPA, QTA, surcharges — SCRUM-28's `adjustments` arrays
-are still empty pending the official NEPRA PDFs, see `data/tariffs/raw/sources.md`) is left
-unmatched and produces no finding, rather than guessing. The citation gate (drop a finding if the
-best retrieved chunk scores below 0.3 cosine similarity) runs before any Gemini call, in code, not
-as a prompt instruction.
+A charge the engine doesn't model yet (FCA/FPA, FC/NJ surcharges — SCRUM-28's `adjustments` arrays
+had no entries at all as of 2026-11-25, see the next entry) is left unmatched and produces no
+finding, rather than guessing. The citation gate (drop a finding if the best retrieved chunk
+scores below 0.3 cosine similarity) runs before any Gemini call, in code, not as a prompt
+instruction.
 
 Deviation from the proposed Brief §8.4 `Finding` schema: added `explanation: str` (Gemini's
 non-accusatory phrasing) as its own field, separate from `clause_text` (the retrieved clause,
@@ -58,3 +58,33 @@ Also: `BillExtraction` has no `consumer_status` field (lifeline/protected/unprot
 code the structured JSON splits by status) and surfaces the assumption as a warning. Flagged for a
 future extraction-prompt version, same as the known total_payable_after_due_date tier bug — not
 fixed here.
+
+## 2026-11-25: Add K-Electric's Quarterly Tariff Adjustment to the tariff JSON; FCA/FC/NJ still not modeled (SCRUM-31)
+Flagged during SCRUM-31 review: SCRUM-27/28's sources table said S02, S04, S05 and S07 were still
+"TO DOWNLOAD", but S02 and S03 had actually been downloaded during SCRUM-28 and never logged.
+Fixed by downloading the genuinely-missing ones (S04 IESCO rebasing, S05 LESCO rebasing, S07 the
+K-Electric/XWDISCO Q1 CY2026 quarterly adjustment SRO) and correcting `sources.md`/`sources.csv`.
+
+Of those, only S07 was usable as-is: it gives one clean, single number (Rs. -1.9857/kWh, valid
+June-August 2026 only, confirmed against the primary Gazette notification) that fits
+`TariffAdjustment`'s schema (a flat `rate_pkr_per_unit`). Added to every K-Electric tariff file
+except lifeline and prepaid ones (both explicitly excluded by the SRO's own text). The time
+window is written into the adjustment's `name` itself (`"...- valid Jun-Aug 2026 only"`) rather
+than a schema field, because `TariffAdjustment` has no effective-date fields and
+`TariffCalculationInput` isn't given a billing period to check one against — extending both to do
+this properly is follow-up work, not done here. `grounding.py`'s component-matching now resolves
+a tax/adjustment's own canonical key by keyword (e.g. anything containing "qta") rather than by
+exact slug, so that long, caveat-bearing name doesn't become an unmatchable dict key.
+
+Deliberately NOT added: FCA/FPA (the guide itself calls it "variable monthly," with no single
+rate — S02's 51-page decision has the formula, not a number for any specific month, and
+inventing one would break the "never invent a tariff rate" rule) and the FC/NJ surcharges
+(published as ranges, and FC is slab-dependent — `TariffAdjustment` only supports one flat rate).
+S04/S05 (IESCO/LESCO rebasing determinations) are about base tariff rates, not adjustments, and
+can't be used until IESCO/LESCO get base structured tariff files at all (still just `.gitkeep`) —
+a SCRUM-28 scope gap, not something fixed here.
+
+Because this changes GST's basis (GST is 18% of energy + fixed + adjustments) for every
+non-lifeline, non-prepaid K-Electric category, `tests/unit/test_tariff_engine.py`'s two domestic
+bill tests (SCRUM-29, Swati's) needed their expected totals corrected too — the engine logic
+itself didn't change, only the data it now has to work with.

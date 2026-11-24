@@ -27,7 +27,12 @@
     "document_name": "NEPRA Decision: Rationalization of Tariff (XWDISCOs and K-Electric), dated 2026-02-11",
     "clause": "Annex-C ? H Residential Colonies"
   },
-  "adjustments": [],
+  "adjustments": [
+    {
+      "name": "Quarterly Tariff Adjustment (QTA) - valid Jun-Aug 2026 only",
+      "rate_pkr_per_unit": -1.9857
+    }
+  ],
   "taxes": [
     {
       "name": "GST",

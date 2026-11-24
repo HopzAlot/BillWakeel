@@ -25,7 +25,12 @@
     "rate_pkr": 0
   },
   "minimum_monthly_charge_pkr": null,
-  "adjustments": [],
+  "adjustments": [
+    {
+      "name": "Quarterly Tariff Adjustment (QTA) - valid Jun-Aug 2026 only",
+      "rate_pkr_per_unit": -1.9857
+    }
+  ],
   "taxes": [
     {
       "name": "GST",

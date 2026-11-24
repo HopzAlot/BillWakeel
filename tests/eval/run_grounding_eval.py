@@ -39,9 +39,11 @@ from services.tariff_engine import (  # noqa: E402
 RESULTS_DIR = REPO_ROOT / "docs" / "eval"
 
 # Real K-Electric A-1(a) protected tariff, 145 units, 2 kW sanctioned load.
-# Energy (1639.45), fixed (600.0) and Electricity Duty (24.59) are the
+# Energy (1639.45), fixed (600.0), Electricity Duty (24.59) and the
+# Quarterly Tariff Adjustment (-287.93, sourced from the official Gazette
+# SRO — SCRUM-31, 2026-11-25, see data/tariffs/raw/sources.md S07) are the
 # exact engine-computed values — any finding on those would be a bug.
-# GST's exact value is 403.1; billed here as 903.1, a seeded Rs. 500 error.
+# GST's exact value is 351.27; billed here as 851.27, a seeded Rs. 500 error.
 SEEDED_EXTRACTION = BillExtraction(
     utility="electricity",
     provider="K-Electric",
@@ -52,8 +54,9 @@ SEEDED_EXTRACTION = BillExtraction(
         ChargeLine(name="Cost of electricity", amount_pkr=1639.45),
         ChargeLine(name="Fixed charges", amount_pkr=600.0),
         ChargeLine(name="Electricity duty", amount_pkr=24.59),
-        ChargeLine(name="GST", amount_pkr=903.1),  # seeded: real value is 403.1
-        ChargeLine(name="Fuel price adjustment", amount_pkr=71.0),  # no engine counterpart
+        ChargeLine(name="GST", amount_pkr=851.27),  # seeded: real value is 351.27
+        ChargeLine(name="Qtr tariff adjustment", amount_pkr=-287.93),  # exact engine value
+        ChargeLine(name="Fuel price adjustment", amount_pkr=71.0),  # still no engine counterpart
     ],
 )
 

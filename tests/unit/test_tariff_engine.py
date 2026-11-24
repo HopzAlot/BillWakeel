@@ -341,10 +341,12 @@ def test_ke_protected_domestic_bill(ke_tariffs):
 
     # telescopic: 100 x 10.54 + 50 x 13.01 = 1054 + 650.50 = 1704.50
     # fixed: lands in 101-200 slab, Rs 300/kW x 3 kW = 900
-    # GST 18% of 2604.50 = 468.81, ED 1.5% of 1704.50 = 25.57
+    # QTA (SCRUM-31, added 2026-11-25, valid Jun-Aug 2026 only): 150 x -1.9857 = -297.86
+    # subtotal = 1704.50 + 900 - 297.86 = 2306.64
+    # GST 18% of 2306.64 = 415.20, ED 1.5% of 1704.50 = 25.57
     assert result.energy_charge_pkr == pytest.approx(1704.50)
     assert result.fixed_charge_pkr == pytest.approx(900)
-    assert result.total_pkr == pytest.approx(3098.88)
+    assert result.total_pkr == pytest.approx(2747.41)
 
 
 def test_ke_unprotected_domestic_bill(ke_tariffs):
@@ -352,9 +354,11 @@ def test_ke_unprotected_domestic_bill(ke_tariffs):
     result = calculate_bill(select_tariff(ke_tariffs, data), data)
 
     # landing slab: all 200 units x 28.91 = 5782; fixed Rs 300/kW x 3 kW = 900
-    # GST 18% of 6682 = 1202.76, ED 1.5% of 5782 = 86.73
+    # QTA (SCRUM-31, added 2026-11-25, valid Jun-Aug 2026 only): 200 x -1.9857 = -397.14
+    # subtotal = 5782 + 900 - 397.14 = 6284.86
+    # GST 18% of 6284.86 = 1131.27, ED 1.5% of 5782 = 86.73
     assert result.energy_charge_pkr == pytest.approx(5782)
-    assert result.total_pkr == pytest.approx(7971.49)
+    assert result.total_pkr == pytest.approx(7502.86)
 
 
 def test_ke_lifeline_is_exempt_from_fixed_charge_and_gst(ke_tariffs):
