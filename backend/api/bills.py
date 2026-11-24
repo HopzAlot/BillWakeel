@@ -1,9 +1,11 @@
-"""Bill endpoints — upload, extract, and save corrected extraction.
+"""Bill endpoints — upload, extract, save corrected extraction, and findings.
 
-Implements the Sprint 1 API contract (Brief §8.2):
+Implements the Sprint 1 API contract (Brief §8.2) plus the Sprint 2
+findings endpoint (Brief §8.4, SCRUM-31):
     POST   /bills                    – upload a bill
     POST   /bills/{bill_id}/extract  – run the Extraction Agent
     PUT    /bills/{bill_id}/extraction – save user-corrected values
+    GET    /bills/{bill_id}/findings – recalculate and return cited findings
 """
 
 from __future__ import annotations
@@ -16,10 +18,25 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, status
 
 from config import settings
 from agents.extraction import extract_bill, ExtractionError, ExtractionResult
+from agents.grounding import ground_bill
 from models.bill import BillExtraction, BillUploadResponse, ExtractionResponse
+from models.finding import FindingsResponse
+from services.bill_to_tariff import (
+    build_calculation_input,
+    normalize_disco,
+    normalize_tariff_code,
+)
 from services.gemini import GeminiError
+from services.tariff_engine import (
+    TariffEngineError,
+    calculate_bill,
+    load_tariff_schedules,
+    select_tariff,
+)
 
 router = APIRouter(prefix="/bills", tags=["bills"])
+
+_TARIFFS_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "tariffs" / "structured"
 
 # ---------------------------------------------------------------------------
 # In-memory stores (replaced by a database in Sprint 2)
@@ -198,3 +215,48 @@ async def update_extraction(bill_id: str, body: BillExtraction):
 
     _extraction_store[bill_id] = body
     return body
+
+
+# ── GET /bills/{bill_id}/findings ────────────────────────────────────────
+@router.get(
+    "/{bill_id}/findings",
+    response_model=FindingsResponse,
+    summary="Recalculate a bill and return cited discrepancy findings",
+)
+async def get_findings(bill_id: str):
+    """Recalculate the bill from official tariff data (SCRUM-29) and run
+    the Tariff-Grounding Agent (SCRUM-31) over the result.
+
+    Error mapping:
+    - Unknown bill_id, or not extracted yet → 404
+    - Can't match the bill to a tariff on file (unsupported DISCO, no
+      tariff for this code/category, missing required field) → 422
+    """
+    if bill_id not in _bill_store:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Bill '{bill_id}' not found.",
+        )
+
+    extraction = _extraction_store.get(bill_id)
+    if extraction is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Bill '{bill_id}' has not been extracted yet.",
+        )
+
+    try:
+        disco = normalize_disco(extraction.provider)
+        tariff_code = normalize_tariff_code(extraction.tariff_category)
+        calc_input, pre_warnings = build_calculation_input(extraction, disco, tariff_code)
+        schedules = load_tariff_schedules(_TARIFFS_DIR / disco.lower())
+        tariff = select_tariff(schedules, calc_input)
+        calculation = calculate_bill(tariff, calc_input)
+        calculation.warnings = pre_warnings + calculation.warnings
+    except TariffEngineError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Could not match this bill to a tariff on file: {exc}",
+        )
+
+    return ground_bill(bill_id, extraction, calculation)
