@@ -36,3 +36,25 @@ approximate total. A sanctioned load outside the tariff's range is returned as a
 error, because some load limits in the data still need checking. A recalculated total within
 Rs. 1 of the billed total counts as a match; provisional until real bills are checked. Rejected:
 Decimal arithmetic (rounding every line to paisa is enough at bill scale).
+
+## 2026-11-25: Grounding Agent matches at the charge-line level; Finding gets an `explanation` field (SCRUM-31)
+`ground_bill()` matches each printed charge line to the one engine-computed component it's about
+(energy, fixed charge, or a named tax/adjustment), by exact alias after normalizing punctuation —
+not fuzzy/substring matching, because "GST" and "GST on FPA" must never match the same component.
+A charge the engine doesn't model yet (FCA/FPA, QTA, surcharges — SCRUM-28's `adjustments` arrays
+are still empty pending the official NEPRA PDFs, see `data/tariffs/raw/sources.md`) is left
+unmatched and produces no finding, rather than guessing. The citation gate (drop a finding if the
+best retrieved chunk scores below 0.3 cosine similarity) runs before any Gemini call, in code, not
+as a prompt instruction.
+
+Deviation from the proposed Brief §8.4 `Finding` schema: added `explanation: str` (Gemini's
+non-accusatory phrasing) as its own field, separate from `clause_text` (the retrieved clause,
+verbatim, never edited by the LLM). The brief's step 2 requires Gemini to phrase each finding in
+non-accusatory wording, but the proposed schema had nowhere to put that sentence without
+overwriting the exact quoted source text SCRUM-33/34 need to display as the citation.
+
+Also: `BillExtraction` has no `consumer_status` field (lifeline/protected/unprotected), so
+`services/bill_to_tariff.py` defaults it to `"protected"` for A-1(a) bills only (the one tariff
+code the structured JSON splits by status) and surfaces the assumption as a warning. Flagged for a
+future extraction-prompt version, same as the known total_payable_after_due_date tier bug — not
+fixed here.
