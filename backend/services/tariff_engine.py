@@ -26,6 +26,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from models.tariff import (
+    TariffAdjustment,
     TariffCalculationInput,
     TariffFixedCharge,
     TariffSchedule,
@@ -135,6 +136,50 @@ def _load_warnings(tariff: TariffSchedule, data: TariffCalculationInput) -> list
             f"range ({low} to {high} kW)"
         ]
     return []
+
+
+def _filter_adjustments(
+    adjustments: list[TariffAdjustment], billing_month: str | None
+) -> tuple[list[TariffAdjustment], list[str]]:
+    """Split a tariff's adjustments into (applicable, warnings).
+
+    An adjustment with no effective window always applies. One with a
+    window is skipped - with a warning, not a silent drop - if the bill
+    has no billing_month to check it against, or if billing_month falls
+    outside the window. Applying it anyway would be guessing; NEPRA
+    adjustments are time-bound by design (FCA monthly, QTA quarterly).
+    """
+    applicable: list[TariffAdjustment] = []
+    warnings: list[str] = []
+
+    for adjustment in adjustments:
+        window = f"{adjustment.effective_from_month or '...'} to {adjustment.effective_to_month or '...'}"
+
+        if adjustment.effective_from_month is None and adjustment.effective_to_month is None:
+            applicable.append(adjustment)
+            continue
+
+        if billing_month is None:
+            warnings.append(
+                f"'{adjustment.name}' not applied: it only applies {window}, "
+                "but this bill has no billing_month to check against"
+            )
+            continue
+
+        in_range = (
+            adjustment.effective_from_month is None or billing_month >= adjustment.effective_from_month
+        ) and (
+            adjustment.effective_to_month is None or billing_month <= adjustment.effective_to_month
+        )
+        if in_range:
+            applicable.append(adjustment)
+        else:
+            warnings.append(
+                f"'{adjustment.name}' not applied: billing_month {billing_month} "
+                f"is outside its {window} window"
+            )
+
+    return applicable, warnings
 
 
 # --- energy charge -----------------------------------------------------------
@@ -284,12 +329,16 @@ def calculate_bill(
     if minimum is not None and fixed == 0 and energy < minimum:
         topup = _money(minimum - energy)
 
+    applicable_adjustments, adjustment_warnings = _filter_adjustments(
+        tariff.adjustments, data.billing_month
+    )
+    warnings = warnings + adjustment_warnings
     adjustments = [
         ChargeItem(
             name=adjustment.name,
             amount_pkr=_money(adjustment.rate_pkr_per_unit * data.monthly_units),
         )
-        for adjustment in tariff.adjustments
+        for adjustment in applicable_adjustments
     ]
     subtotal = _money(
         energy + fixed + topup + sum(a.amount_pkr for a in adjustments)

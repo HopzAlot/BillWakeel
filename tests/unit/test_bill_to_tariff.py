@@ -49,13 +49,24 @@ def test_normalize_tariff_code_rejects_missing_category():
 def test_build_calculation_input_guesses_protected_for_a1a_with_warning():
     extraction = BillExtraction(
         provider="K-Electric", tariff_category="A-1a(01)",
-        sanctioned_load_kw=2.0, units_consumed=145,
+        sanctioned_load_kw=2.0, units_consumed=145, billing_month="2026-07",
     )
     calc_input, warnings = build_calculation_input(extraction, "K-Electric", "A-1(a)")
 
     assert calc_input.consumer_status == "protected"
     assert len(warnings) == 1
     assert "consumer_status" in warnings[0]
+
+
+def test_build_calculation_input_warns_when_billing_month_missing():
+    extraction = BillExtraction(
+        provider="IESCO", tariff_category="B-1(a)",
+        sanctioned_load_kw=10.0, units_consumed=500,
+    )
+    calc_input, warnings = build_calculation_input(extraction, "IESCO", "B-1(a)")
+
+    assert calc_input.billing_month is None
+    assert any("billing_month" in w for w in warnings)
 
 
 def test_build_calculation_input_requires_units_consumed():

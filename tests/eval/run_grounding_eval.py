@@ -47,6 +47,7 @@ RESULTS_DIR = REPO_ROOT / "docs" / "eval"
 SEEDED_EXTRACTION = BillExtraction(
     utility="electricity",
     provider="K-Electric",
+    billing_month="2026-07",  # inside the QTA's Jun-Aug 2026 window
     tariff_category="A-1a(01)",
     sanctioned_load_kw=2.0,
     units_consumed=145,
@@ -69,6 +70,7 @@ def main():
         monthly_units=145,
         sanctioned_load_kw=2.0,
         consumer_status="protected",
+        billing_month="2026-07",
     )
     tariff = select_tariff(schedules, calc_input)
     calculation = calculate_bill(tariff, calc_input)

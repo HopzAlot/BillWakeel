@@ -39,6 +39,7 @@ def ke_a1a_calculation():
         monthly_units=145,
         sanctioned_load_kw=2.0,
         consumer_status="protected",
+        billing_month="2026-07",  # inside the QTA's Jun-Aug 2026 window
     )
     tariff = select_tariff(schedules, calc_input)
     return calculate_bill(tariff, calc_input)

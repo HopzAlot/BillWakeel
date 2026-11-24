@@ -81,6 +81,23 @@ class TariffAdjustment(BaseModel):
     name: str
     rate_pkr_per_unit: float
 
+    # "YYYY-MM", inclusive on both ends. None means unbounded in that
+    # direction. Most adjustments (FCA/FPA monthly, QTA quarterly) are
+    # only correct for a specific window, unlike the slabs/taxes around
+    # them, which hold for the whole TariffSchedule's effective period.
+    effective_from_month: str | None = None
+    effective_to_month: str | None = None
+
+    @model_validator(mode="after")
+    def validate_window(self):
+        if (
+            self.effective_from_month is not None
+            and self.effective_to_month is not None
+            and self.effective_to_month < self.effective_from_month
+        ):
+            raise ValueError("effective_to_month cannot be earlier than effective_from_month")
+        return self
+
 
 class TariffTax(BaseModel):
     name: str
@@ -161,3 +178,8 @@ class TariffCalculationInput(BaseModel):
     mdi_kw: float | None = Field(default=None, ge=0)
     peak_units: float | None = Field(default=None, ge=0)
     off_peak_units: float | None = Field(default=None, ge=0)
+
+    # "YYYY-MM", same format as BillExtraction.billing_month. Needed to
+    # decide whether a time-bounded TariffAdjustment (see above) applies;
+    # without it, such adjustments are skipped, not guessed.
+    billing_month: str | None = None

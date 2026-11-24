@@ -7,10 +7,11 @@ not a prompt instruction the model could ignore.
 
 Known gap, not a bug: as of 2026-11-25 only K-Electric's Quarterly Tariff
 Adjustment (QTA) is modeled in `adjustments` (sourced from the official
-Gazette SRO, see data/tariffs/raw/sources.md S07) — and only for non-
-lifeline, non-prepaid K-Electric consumers, and only correct for bills
-from June-August 2026, since `TariffAdjustment` has no effective-date
-fields and the engine isn't given a billing period to check one against.
+Gazette SRO, see data/tariffs/raw/sources.md S07), and only for non-
+lifeline, non-prepaid K-Electric consumers. It's time-bounded (June-
+August 2026 only) via `TariffAdjustment.effective_from_month`/
+`effective_to_month` — the engine skips it, with a warning, for any bill
+whose `billing_month` falls outside that window or isn't known at all.
 FCA/FPA (changes monthly, no single rate to record) and the FC/NJ
 surcharges (slab-dependent, published as ranges) still have no engine
 counterpart anywhere. Bill charge lines for those — and compound lines
@@ -71,14 +72,12 @@ _CHARGE_NAME_ALIASES: dict[str, str] = {
     "qta": "qta",
 }
 
-# A tax/adjustment's own name in the tariff JSON sometimes carries a long
-# caveat suffix (e.g. the QTA entry is deliberately named "... - valid
-# Jun-Aug 2026 only" so the time limit is visible everywhere it's quoted,
-# not just in docs). Slugging that whole string would give it an unstable,
-# unmatchable key, so its OWN canonical key is resolved by keyword, not by
-# exact phrase — unlike _CHARGE_NAME_ALIASES above, which must stay exact
-# (a bill's "GST" and "GST on FPA" are different charges and must never
-# collide into the same key).
+# A tax/adjustment's own name in the tariff JSON resolves to its canonical
+# key by keyword, not by exact phrase — unlike _CHARGE_NAME_ALIASES above,
+# which must stay exact (a bill's "GST" and "GST on FPA" are different
+# charges and must never collide into the same key). This only matters
+# for the one name on the JSON side, so a looser match is safe and keeps
+# the key stable if the tariff JSON's exact wording changes.
 _ADJUSTMENT_KEY_KEYWORDS: list[tuple[str, str]] = [
     ("quarterly tariff adjustment", "qta"),
     ("qta", "qta"),

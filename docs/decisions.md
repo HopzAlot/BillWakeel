@@ -68,13 +68,18 @@ K-Electric/XWDISCO Q1 CY2026 quarterly adjustment SRO) and correcting `sources.m
 Of those, only S07 was usable as-is: it gives one clean, single number (Rs. -1.9857/kWh, valid
 June-August 2026 only, confirmed against the primary Gazette notification) that fits
 `TariffAdjustment`'s schema (a flat `rate_pkr_per_unit`). Added to every K-Electric tariff file
-except lifeline and prepaid ones (both explicitly excluded by the SRO's own text). The time
-window is written into the adjustment's `name` itself (`"...- valid Jun-Aug 2026 only"`) rather
-than a schema field, because `TariffAdjustment` has no effective-date fields and
-`TariffCalculationInput` isn't given a billing period to check one against — extending both to do
-this properly is follow-up work, not done here. `grounding.py`'s component-matching now resolves
-a tax/adjustment's own canonical key by keyword (e.g. anything containing "qta") rather than by
-exact slug, so that long, caveat-bearing name doesn't become an unmatchable dict key.
+except lifeline and prepaid ones (both explicitly excluded by the SRO's own text).
+
+Follow-up the same day: a flat rate with no effective window is actively dangerous once a
+schedule outlives one quarter — it would silently misapply June-August's QTA to a December bill.
+Rather than bury that caveat in the adjustment's name string, extended the schema properly:
+`TariffAdjustment` gained `effective_from_month`/`effective_to_month` ("YYYY-MM", inclusive,
+either end optional), and `TariffCalculationInput` gained `billing_month` (same format as
+`BillExtraction.billing_month`, threaded through by `services/bill_to_tariff.py`). `calculate_bill`
+now skips a time-bounded adjustment outside its window — or when `billing_month` isn't known at
+all — and records why in `BillCalculation.warnings`, rather than guessing. `grounding.py`'s
+component-matching resolves a tax/adjustment's own canonical key by keyword (e.g. anything
+containing "qta") rather than exact slug, so the match stays stable if the JSON's wording changes.
 
 Deliberately NOT added: FCA/FPA (the guide itself calls it "variable monthly," with no single
 rate — S02's 51-page decision has the formula, not a number for any specific month, and

@@ -88,5 +88,11 @@ def build_calculation_input(
         monthly_units=extraction.units_consumed,
         sanctioned_load_kw=extraction.sanctioned_load_kw,
         consumer_status=consumer_status,
+        billing_month=extraction.billing_month,
     )
+    if extraction.billing_month is None:
+        warnings.append(
+            "bill has no billing_month; any time-bounded tariff adjustment "
+            "(e.g. the current quarter's QTA) will be skipped rather than guessed."
+        )
     return calc_input, warnings

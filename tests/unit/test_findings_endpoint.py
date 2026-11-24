@@ -36,6 +36,7 @@ def _upload_and_set_extraction(extraction_body: dict) -> str:
 _KE_A1A_BASE = {
     "utility": "electricity",
     "provider": "K-Electric",
+    "billing_month": "2026-07",  # inside the QTA's Jun-Aug 2026 window
     "tariff_category": "A-1a(01)",
     "sanctioned_load_kw": 2.0,
     "units_consumed": 145,
