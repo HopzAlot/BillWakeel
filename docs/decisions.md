@@ -86,8 +86,31 @@ rate — S02's 51-page decision has the formula, not a number for any specific m
 inventing one would break the "never invent a tariff rate" rule) and the FC/NJ surcharges
 (published as ranges, and FC is slab-dependent — `TariffAdjustment` only supports one flat rate).
 S04/S05 (IESCO/LESCO rebasing determinations) are about base tariff rates, not adjustments, and
-can't be used until IESCO/LESCO get base structured tariff files at all (still just `.gitkeep`) —
-a SCRUM-28 scope gap, not something fixed here.
+weren't used here — see the next entry for what they'd actually be for.
+
+## 2026-11-25: IESCO/LESCO bills resolve against the K-Electric-sourced schedule; no new JSON files needed (SCRUM-31)
+Checked whether IESCO/LESCO needed their own structured tariff files built from S04/S05 before
+either could be recalculated. They don't, for the national-uniform-schedule categories: Pakistan's
+electricity tariff is one federally-subsidized uniform schedule across all XWDISCOs and K-Electric
+(`data/tariffs/raw/*/tariff_extract_2026.md` are byte-identical in rates across all three DISCOs,
+differing only in front-matter and the applicability note), and every K-Electric tariff JSON
+already declares `"discos": ["K-Electric", "IESCO", "LESCO"]` (with the exact exclusions you'd
+expect: SCARP tariffs exclude K-Electric, Rawat Lab is IESCO-only). `select_tariff` already
+filters on a schedule's own `discos` list, not its folder.
+
+The actual bug was in `api/bills.py`'s `/findings` endpoint: it called `load_tariff_schedules` on
+`data/tariffs/structured/<disco>/`, scoped to one DISCO's own folder, so an IESCO or LESCO bill
+404'd even though a matching schedule already existed one folder over. Fixed by loading every
+schedule from every subfolder and letting `select_tariff` do the filtering it already does.
+Verified against a real anonymised IESCO sample bill, end to end through the actual endpoint.
+
+Still a real gap, unaffected by this fix: S04/S05 (IESCO/LESCO's own NEPRA rebasing
+determinations) would matter if either DISCO's actual rates ever diverge from the uniform
+schedule - at that point a DISCO-specific file would need to coexist with (and take precedence
+over) the shared one, which `select_tariff` doesn't yet have a rule for (today it would raise
+"ambiguous" on a tariff_code+status that matches two files, which is at least a safe failure, not
+a silent wrong answer). Nobody has transcribed S04/S05's annexures to check whether that's
+actually the case.
 
 Because this changes GST's basis (GST is 18% of energy + fixed + adjustments) for every
 non-lifeline, non-prepaid K-Electric category, `tests/unit/test_tariff_engine.py`'s two domestic

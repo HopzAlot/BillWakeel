@@ -38,6 +38,23 @@ router = APIRouter(prefix="/bills", tags=["bills"])
 
 _TARIFFS_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "tariffs" / "structured"
 
+
+def _load_all_tariff_schedules() -> list:
+    """Load every tariff schedule, from every DISCO's folder.
+
+    A schedule's own `discos` list, not the folder it lives in, decides
+    which DISCOs it applies to (select_tariff filters on that). Pakistan's
+    electricity tariff is nationally uniform by federal subsidy, so most
+    of today's schedules are K-Electric-sourced but declare IESCO and
+    LESCO too — scoping this to one DISCO's own folder would wrongly 404
+    every IESCO/LESCO bill even though a matching schedule already exists.
+    """
+    schedules = []
+    for subdir in sorted(_TARIFFS_DIR.iterdir()):
+        if subdir.is_dir():
+            schedules.extend(load_tariff_schedules(subdir))
+    return schedules
+
 # ---------------------------------------------------------------------------
 # In-memory stores (replaced by a database in Sprint 2)
 # ---------------------------------------------------------------------------
@@ -249,7 +266,7 @@ async def get_findings(bill_id: str):
         disco = normalize_disco(extraction.provider)
         tariff_code = normalize_tariff_code(extraction.tariff_category)
         calc_input, pre_warnings = build_calculation_input(extraction, disco, tariff_code)
-        schedules = load_tariff_schedules(_TARIFFS_DIR / disco.lower())
+        schedules = _load_all_tariff_schedules()
         tariff = select_tariff(schedules, calc_input)
         calculation = calculate_bill(tariff, calc_input)
         calculation.warnings = pre_warnings + calculation.warnings

@@ -71,6 +71,30 @@ def test_findings_for_unsupported_disco_is_422():
     assert response.status_code == 422
 
 
+def test_findings_resolves_iesco_against_the_uniform_national_schedule():
+    # Pakistan's electricity tariff is nationally uniform by federal
+    # subsidy: the only tariff JSON on file is K-Electric-sourced, but it
+    # declares IESCO and LESCO too. An IESCO bill must resolve against it
+    # rather than 404/422 just because there's no iesco/ folder of its own.
+    # B-1(a) has no consumer_status split, so this is unambiguous.
+    body = {
+        "utility": "electricity",
+        "provider": "IESCO",
+        "tariff_category": "B-1(a)",
+        "sanctioned_load_kw": 10.0,
+        "units_consumed": 1000,
+        "charges": [
+            {"name": "Cost of electricity", "amount_pkr": 26230.0},  # exact engine value
+            {"name": "Fixed charges", "amount_pkr": 1000.0},  # exact engine value
+        ],
+    }
+    bill_id = _upload_and_set_extraction(body)
+
+    response = client.get(f"/bills/{bill_id}/findings")
+    assert response.status_code == 200
+    assert response.json()["findings"] == []
+
+
 def test_findings_catches_a_seeded_gst_error_end_to_end():
     # 351.27 is the exact engine value as of 2026-11-25 (after SCRUM-31
     # added the real Quarterly Tariff Adjustment to the tariff JSON, which
