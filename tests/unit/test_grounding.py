@@ -156,8 +156,20 @@ def test_weak_citation_drops_the_finding_even_past_tolerance(ke_a1a_calculation,
     )
     monkeypatch.setattr(
         "agents.grounding.retrieve",
-        lambda query, disco, top_k=3: [ChunkResult(chunk=weak_chunk, score=0.05)],
+        lambda query, disco, top_k=3, **filters: [ChunkResult(chunk=weak_chunk, score=0.05)],
     )
+
+    # no exact row for this charge, so similarity is the only evidence
+    monkeypatch.setattr("agents.grounding._citation_filter", lambda *args: {})
+
+    extraction = _clean_extraction(gst_amount_pkr=EXACT_GST_PKR + 500)
+    response = ground_bill("bill-1", extraction, ke_a1a_calculation)
+
+    assert response.findings == []
+
+
+def test_finding_is_dropped_when_no_row_matches_exactly(ke_a1a_calculation, monkeypatch):
+    monkeypatch.setattr("agents.grounding.retrieve", lambda *args, **kwargs: [])
 
     extraction = _clean_extraction(gst_amount_pkr=EXACT_GST_PKR + 500)
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)

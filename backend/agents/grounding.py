@@ -134,6 +134,46 @@ def _match_component(
     return components.get(canonical)
 
 
+# Tax and adjustment components -> the one clause row that may be cited.
+_COMPONENT_ROW_LABELS = {
+    "gst": "General Sales Tax (GST)",
+    "electricity_duty": "Electricity Duty (ED)",
+    "qta": "Quarterly Tariff Adjustment (QTA)",
+}
+
+
+def _citation_filter(
+    display_name: str, expected_amount: float, calculation: BillCalculation
+) -> dict[str, str]:
+    """Which clause rows may be cited for a component.
+
+    Similarity ranking alone cites neighbouring tariffs' rows, so the row is
+    pinned down exactly: energy and fixed charges to this tariff's row that
+    prints the rate the engine used; taxes and the QTA to their own line.
+    Electricity Duty varies by category, so its row must also state the
+    percentage the engine applied.
+    """
+    if display_name in ("Energy charges", "Fixed charges"):
+        filters = {"tariff_code": calculation.tariff_code}
+        lines = calculation.slab_lines
+        if lines:
+            # The fixed charge sits on the landing slab's row, or the peak row
+            # for TOU (the guide's off-peak rows say "included above").
+            peak_row = display_name == "Fixed charges" and calculation.metering_type == "tou"
+            rate = lines[0 if peak_row else -1].rate_per_unit_pkr
+            filters["contains"] = f"{rate:.2f}"
+        return filters
+
+    key = _canonical_component_key(display_name)
+    if key not in _COMPONENT_ROW_LABELS:
+        return {}
+    filters = {"row_label": _COMPONENT_ROW_LABELS[key]}
+    if key == "electricity_duty" and calculation.energy_charge_pkr:
+        percent = round(expected_amount / calculation.energy_charge_pkr * 100, 1)
+        filters["contains"] = f"{percent:g}%"
+    return filters
+
+
 def _confidence(score: float) -> Literal["high", "medium", "low"]:
     if score >= 0.65:
         return "high"
@@ -188,7 +228,8 @@ def ground_bill(
 ) -> FindingsResponse:
     """Compare a bill's printed charges to the engine's expected amounts.
 
-    Every finding is backed by a retrieved clause with at least
+    Every finding is backed by a clause row matched exactly to the charge
+    (see _citation_filter), or failing that one with at least
     MIN_CITATION_SIMILARITY similarity; anything else is dropped before
     the LLM phrasing step runs, per Part A rule 2 ("every finding must
     cite a real clause").
@@ -207,9 +248,18 @@ def ground_bill(
             continue
 
         query = f"What is the {display_name} for {calculation.tariff_code}?"
-        results = retrieve(query, calculation.disco, top_k=3)
-        if not results or results[0].score < MIN_CITATION_SIMILARITY:
-            continue  # no verifiable clause: drop, don't show uncited
+        filters = _citation_filter(display_name, expected_amount, calculation)
+        results = retrieve(
+            query,
+            calculation.disco,
+            top_k=3,
+            billing_month=extraction.billing_month,
+            **filters,
+        )
+        # No verifiable clause: drop, don't show uncited. An exact row match
+        # is the verification; without one, similarity has to clear the bar.
+        if not results or (not filters and results[0].score < MIN_CITATION_SIMILARITY):
+            continue
 
         best = results[0]
         explanation = _phrase_finding(
@@ -225,8 +275,8 @@ def ground_bill(
                 clause_id=best.chunk.clause_id,
                 clause_text=best.chunk.text,
                 explanation=explanation,
-                source_url=str(calculation.source.url),
-                confidence=_confidence(best.score),
+                source_url=best.chunk.source_url or str(calculation.source.url),
+                confidence="high" if filters else _confidence(best.score),
             )
         )
 

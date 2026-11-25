@@ -147,3 +147,22 @@ reading of "minimum monthly charges ... even if no energy is consumed", chosen b
 schedule's A-1 note excludes fixed-charge consumers and the D note does not. This supersedes the
 engine limit in the SRO 279 entry above. Tariff `source` fields now point at SRO 279. Not added:
 K-Electric non-TOU B-3/B-4 rows (same codes as the TOU files, so lookup would become ambiguous).
+
+
+## 2026-11-25: Official SRO rows replace out-of-date guide rows in the retrieval index (SCRUM-31)
+The clause text quoted in findings came from copies of the team guide, which disagrees with the
+notified schedule for B-5, D-2(b), E-1(i), E-1(ii), E-2, G, H and Rawat Lab and knows only the
+June-August adjustment, so a finding could quote a clause contradicting its own expected amount.
+`data/tariffs/raw/_official/sro_rows_2026.md` now holds those rows; each `Supersedes:` label drops
+the matching guide row at index time, and the guide extracts stay verbatim. Rejected: editing the
+extracts (they are documented as unchanged copies) and boosting official scores (the wrong row
+would still be retrievable). `retrieve` takes `billing_month` so only that quarter's adjustment can
+be cited, and findings link the clause's own SRO. Also fixed: similarity ranking alone often cited a
+neighbouring tariff's row (e.g. C-2(a) for an A-1(a) energy charge), because the rows read alike.
+Citations are now pinned in code: energy and fixed charges to this tariff's row printing the rate
+used, GST, Electricity Duty and QTA to their own line. An exact match replaces the 0.3 similarity
+bar, since correct lifeline rows score about 0.26. Electricity Duty findings are dropped for
+categories not at 1.5%, as no clause we hold states 1% or 2%. Clauses still taken from the guide
+have no URL of
+their own and fall back to the tariff file's SRO 279 link, which does not cover GST or Electricity
+Duty.
