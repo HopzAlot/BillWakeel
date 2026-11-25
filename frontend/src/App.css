@@ -460,3 +460,140 @@ a {
   }
 }
 
+/* ---------- 11. Findings view (SCRUM-34) ---------- */
+.findings-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.findings-view h2,
+.findings-view h3 {
+  margin: 0;
+  color: var(--ivory);
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.findings-view h2 {
+  font-size: 1.7rem;
+}
+
+.findings-view h3 {
+  font-size: 1.2rem;
+}
+
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finding-card {
+  padding: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.finding-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.finding-confidence {
+  padding: 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.finding-confidence.confidence-high {
+  border-color: var(--sage);
+  color: var(--sage-strong);
+}
+
+.finding-amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+
+.finding-amounts dt {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.finding-amounts dd {
+  margin: 4px 0 0;
+  color: var(--ivory);
+  font-size: var(--text-lg);
+}
+
+.finding-difference {
+  color: var(--sage-strong);
+  font-weight: 600;
+}
+
+.finding-clause {
+  margin: 0;
+  padding: var(--space-2);
+  border-left: 3px solid var(--sage);
+  background: var(--surface-raised);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.finding-clause figcaption {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.finding-clause blockquote {
+  margin: 8px 0;
+  color: var(--ivory);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.finding-clause a {
+  color: var(--sage-strong);
+  font-size: var(--text-sm);
+}
+
+.finding-no-source {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.findings-empty {
+  padding: var(--space-2);
+  border: 1px solid var(--sage);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.findings-empty p {
+  margin: 0 0 6px;
+}
+
+.findings-total,
+.findings-note,
+.findings-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
