@@ -6,7 +6,8 @@ sentence-transformers model, and answers queries by cosine similarity.
 
 The extracts are copies of a secondary guide, so rows that disagree with the
 notified SROs are replaced at index time by the rows in
-``data/tariffs/raw/_official/`` (SCRUM-31). The guide files stay unedited.
+``data/tariffs/raw/_official/`` (SCRUM-31): ``sro_rows_2026.md`` for every
+DISCO, ``<disco>_rows_2026.md`` for one. The guide files stay unedited.
 
 No Gemini calls here: embeddings are local per the locked decision in
 ``docs/decisions.md`` (2026-11-14) — a second rate-limited API call path on
@@ -28,7 +29,7 @@ from sentence_transformers import SentenceTransformer
 from config import PROJECT_ROOT
 
 RAW_TARIFF_DIR = PROJECT_ROOT / "data" / "tariffs" / "raw"
-OFFICIAL_ROWS_PATH = RAW_TARIFF_DIR / "_official" / "sro_rows_2026.md"
+OFFICIAL_DIR = RAW_TARIFF_DIR / "_official"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
 # Folder name under data/tariffs/raw/, and the short code used in clause ids,
@@ -266,10 +267,17 @@ def chunk_document(
     return chunks
 
 
-def superseded_rows(path: Path = OFFICIAL_ROWS_PATH) -> frozenset[str]:
-    """Guide row labels that the official rows file replaces."""
+def official_paths(disco_dir: str) -> list[Path]:
+    """The official rows files that apply to one DISCO."""
+    paths = [OFFICIAL_DIR / "sro_rows_2026.md", OFFICIAL_DIR / f"{disco_dir}_rows_2026.md"]
+    return [path for path in paths if path.exists()]
+
+
+def superseded_rows(disco_dir: str) -> frozenset[str]:
+    """Guide row labels that the official rows replace for this DISCO."""
     return frozenset(
         label.strip()
+        for path in official_paths(disco_dir)
         for line in _SUPERSEDES_RE.findall(path.read_text(encoding="utf-8"))
         for label in line.split("|")
     )
@@ -301,10 +309,11 @@ _index_lock = threading.Lock()
 def _build_index(disco_dir: str) -> _DiscoIndex:
     path = RAW_TARIFF_DIR / disco_dir / "tariff_extract_2026.md"
     short_code = _SHORT_CODES[disco_dir]
-    chunks = chunk_document(path, short_code, superseded_rows())
+    chunks = chunk_document(path, short_code, superseded_rows(disco_dir))
     if not chunks:
         raise ValueError(f"No chunks could be extracted from {path}")
-    chunks += chunk_document(OFFICIAL_ROWS_PATH, short_code)
+    for official in official_paths(disco_dir):
+        chunks += chunk_document(official, short_code)
 
     model = _get_model()
     embeddings = np.asarray(
