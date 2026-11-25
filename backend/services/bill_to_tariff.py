@@ -12,9 +12,9 @@ from __future__ import annotations
 import re
 
 from models.bill import BillExtraction
-from models.tariff import DISCO, TariffCalculationInput, TariffSchedule
-from services.charge_names import CHARGE_NAME_ALIASES, is_surcharge, normalize_charge_name
-from services.tariff_engine import TariffEngineError, calculate_bill, select_tariff
+from models.tariff import DISCO, TariffCalculationInput
+from services.charge_names import is_surcharge, normalize_charge_name
+from services.tariff_engine import TariffEngineError
 
 # "A-1a(01)" (how the Extraction Agent writes a category it read off a bill)
 # -> letter "A", number "1", sub-letter "a". Also accepts the tariff JSON's
@@ -24,16 +24,10 @@ from services.tariff_engine import TariffEngineError, calculate_bill, select_tar
 _CODE_RE = re.compile(r"^([A-Za-z]+)-?(\d+)\(?([a-zA-Z]?)\)?")
 
 # Consumer status (lifeline/protected/unprotected) isn't in the extraction
-# schema yet (SCRUM-51), and only A-1(a) splits its rates by it. See
-# resolve_consumer_status for what can be worked out from one bill.
+# schema yet (SCRUM-51), and only A-1(a) splits its rates by it. Until it is,
+# nothing that depends on it is checked: guessing it raised false findings.
 _STATUS_SPLIT_CODE = "A-1(a)"
-
-# Protected status requires staying at or below this for six months, so a
-# month above it can only be billed as unprotected.
 _PROTECTED_MAX_UNITS = 200
-
-# Same per-line tolerance as the grounding agent.
-_ENERGY_MATCH_TOLERANCE_PKR = 1.0
 
 
 # Bills print the company's full name, often with "Ltd" or the short code
@@ -74,7 +68,7 @@ def build_calculation_input(
     extraction: BillExtraction, disco: DISCO, tariff_code: str
 ) -> tuple[TariffCalculationInput, list[str]]:
     """Returns (input, warnings). For A-1(a), pass the input through
-    `resolve_consumer_status` before `select_tariff`."""
+    `withhold_status_dependent_checks` before `select_tariff`."""
     if extraction.units_consumed is None:
         raise TariffEngineError("bill has no units_consumed; cannot recalculate")
     if extraction.sanctioned_load_kw is None:
@@ -99,58 +93,32 @@ def build_calculation_input(
     return calc_input, warnings
 
 
-def resolve_consumer_status(
-    extraction: BillExtraction,
+def withhold_status_dependent_checks(
     calc_input: TariffCalculationInput,
-    schedules: list[TariffSchedule],
 ) -> tuple[TariffCalculationInput, list[str], frozenset[str]]:
-    """Fill in `consumer_status` for A-1(a).
+    """For A-1(a), where the consumer's status is not known.
 
     Returns (input, warnings, unverifiable), where `unverifiable` names the
-    components that must not be flagged because the status is unknown.
-    Over 200 units it is unprotected. Otherwise it is taken from whichever
-    status's rates reproduce the printed energy charge, if exactly one does.
-    That reads the utility's classification; it cannot check it.
+    components that must not be flagged. A status is filled in only so a
+    total can be calculated; it is not a claim about the consumer.
     """
     if calc_input.tariff_code != _STATUS_SPLIT_CODE:
         return calc_input, [], frozenset()
 
     units = calc_input.monthly_units
-    if units > _PROTECTED_MAX_UNITS:
-        warning = f"treated as unprotected: {units:g} units is above {_PROTECTED_MAX_UNITS}"
-        return calc_input.model_copy(update={"consumer_status": "unprotected"}), [warning], frozenset()
-
-    printed = [
-        charge.amount_pkr
-        for charge in extraction.charges
-        if CHARGE_NAME_ALIASES.get(normalize_charge_name(charge.name)) == "energy"
-    ]
-    matches = []
-    for status in ("lifeline", "protected", "unprotected"):
-        candidate = calc_input.model_copy(update={"consumer_status": status})
-        try:
-            energy = calculate_bill(select_tariff(schedules, candidate), candidate).energy_charge_pkr
-        except TariffEngineError:
-            continue  # e.g. lifeline does not reach this many units
-        if len(printed) == 1 and abs(printed[0] - energy) <= _ENERGY_MATCH_TOLERANCE_PKR:
-            matches.append(candidate)
-
-    if len(matches) == 1:
-        warning = (
-            f"treated as {matches[0].consumer_status}: the printed energy charge matches "
-            "that rate. Whether this is the right category for you was not checked."
-        )
-        return matches[0], [warning], frozenset()
-
+    # The protected schedule stops at 200 units, so above it only the
+    # unprotected one can produce a total.
+    assumed = "protected" if units <= _PROTECTED_MAX_UNITS else "unprotected"
     unverifiable = {"energy", "fixed", "gst", "electricity_duty"}
     if units <= 100:
         unverifiable.add("qta")  # lifeline consumers are exempt from it
     warning = (
-        "could not tell whether this is a lifeline, protected or unprotected consumer, "
-        "so charges that depend on it were not checked. The recalculated total assumes protected."
+        "we do not yet know whether this is a lifeline, protected or unprotected "
+        "consumer, so charges that depend on it were not checked. The recalculated "
+        f"total assumes {assumed}."
     )
     return (
-        calc_input.model_copy(update={"consumer_status": "protected"}),
+        calc_input.model_copy(update={"consumer_status": assumed}),
         [warning],
         frozenset(unverifiable),
     )

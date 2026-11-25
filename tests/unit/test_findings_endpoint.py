@@ -95,16 +95,12 @@ def test_findings_resolves_iesco_against_the_uniform_national_schedule():
     assert response.json()["findings"] == []
 
 
-def test_findings_catches_a_seeded_gst_error_end_to_end():
-    # 355.70 is the exact engine value as of 2026-11-25 (after SCRUM-31
-    # added the real Quarterly Tariff Adjustment to the tariff JSON, which
-    # changed the base GST is a percentage of).
+def test_findings_catches_a_seeded_qta_error_end_to_end():
+    # A-1(a) status is unknown, so only status-independent lines are checked.
+    # QTA for 145 units in July 2026 is 145 x -1.9857 = -287.93.
     body = {
         **_KE_A1A_BASE,
-        "charges": [
-            *_KE_A1A_BASE["charges"],
-            {"name": "GST", "amount_pkr": 355.70 + 500},  # seeded error
-        ],
+        "charges": [{"name": "Qtr tariff adjustment", "amount_pkr": -187.93}],
     }
     bill_id = _upload_and_set_extraction(body)
 
@@ -115,7 +111,7 @@ def test_findings_catches_a_seeded_gst_error_end_to_end():
     assert data["bill_id"] == bill_id
     assert len(data["findings"]) == 1
     finding = data["findings"][0]
-    assert finding["charge_name"] == "GST"
+    assert finding["charge_name"] == "Qtr tariff adjustment"
     assert finding["clause_text"]
     assert finding["source_url"].startswith("https://")
 
@@ -137,7 +133,7 @@ def test_findings_for_clean_bill_is_empty():
 
 def test_findings_does_not_flag_status_dependent_charges_when_status_is_unknown():
     body = {**_KE_A1A_BASE, "charges": [
-        {"name": "Cost of electricity", "amount_pkr": 2500.0},  # no status gives this
+        {"name": "Cost of electricity", "amount_pkr": 2500.0},
         {"name": "GST", "amount_pkr": 900.0},
     ]}
     bill_id = _upload_and_set_extraction(body)
@@ -145,5 +141,5 @@ def test_findings_does_not_flag_status_dependent_charges_when_status_is_unknown(
     data = client.get(f"/bills/{bill_id}/findings").json()
 
     assert data["findings"] == []
-    assert any("could not tell" in w for w in data["warnings"])
+    assert any("were not checked" in w for w in data["warnings"])
 

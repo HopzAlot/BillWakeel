@@ -87,15 +87,20 @@ These were as serious as any above.
 - The findings endpoint rejected the full company names that extraction returns.
 - The extraction prompt picked the wrong late-payment total.
 
-All five are fixed. Two fixes reach into later work: extraction prompt v2 had been deferred, and
-working out household type from one bill is only a stopgap. **SCRUM-51 is still open.**
+Retrieval, the eval gap and company names are fixed. The other two belong to later work:
+
+- **Household type (SCRUM-51):** the guess is gone, but nothing replaces it yet. For household bills,
+  energy, fixed charge, GST and duty are **not checked** (nor the quarterly adjustment at 100 units
+  or less), and the response says so.
+- **Late-payment total:** extraction stays on prompt v1 and the bug remains.
 
 ## Open items for the next sprint
 
 | Item | Suggested owner |
 |---|---|
 | Extraction misreads some charge labels (April IESCO bill: duty read as "TV FEE") | Extraction |
-| Capture consumer status properly (SCRUM-51) | Extraction |
+| Capture consumer status (SCRUM-51); until then household bills are barely checked | Extraction |
+| Extraction prompt v2 for the late-payment total | Extraction |
 | Verify K-Electric's duty base with a real K-Electric bill | Engine |
 | Official sources for surcharge rates and Islamabad duty | Tariff data |
 | Monthly fuel price adjustment is not checked (needs bill history) | Engine |

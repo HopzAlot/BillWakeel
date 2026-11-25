@@ -1,18 +1,14 @@
-from pathlib import Path
-
 import pytest
 
-from models.bill import BillExtraction, ChargeLine
+from models.bill import BillExtraction
 from services.bill_to_tariff import (
     build_calculation_input,
     normalize_disco,
     normalize_tariff_code,
-    resolve_consumer_status,
+    withhold_status_dependent_checks,
 )
 from services.charge_names import is_surcharge
-from services.tariff_engine import TariffEngineError, load_tariff_schedules
-
-KE_DIR = Path(__file__).resolve().parents[2] / "data" / "tariffs" / "structured" / "k-electric"
+from services.tariff_engine import TariffEngineError
 
 
 @pytest.mark.parametrize(
@@ -59,43 +55,23 @@ def test_normalize_tariff_code_rejects_missing_category():
         normalize_tariff_code(None)
 
 
-def _resolve(units, energy_pkr):
+@pytest.mark.parametrize("units, assumed, qta_blocked", [
+    (80, "protected", True),     # could be lifeline, which pays no QTA
+    (181, "protected", False),
+    (323, "unprotected", False),  # only schedule that covers it
+])
+def test_a1a_status_dependent_charges_are_not_checked(units, assumed, qta_blocked):
     extraction = BillExtraction(
-        provider="K-Electric", tariff_category="A-1a(01)", sanctioned_load_kw=2.0,
-        units_consumed=units, billing_month="2026-07",
-        charges=[] if energy_pkr is None else
-        [ChargeLine(name="Cost of electricity", amount_pkr=energy_pkr)],
+        provider="K-Electric", tariff_category="A-1a(01)",
+        sanctioned_load_kw=2.0, units_consumed=units,
     )
     calc_input, _ = build_calculation_input(extraction, "K-Electric", "A-1(a)")
-    return resolve_consumer_status(extraction, calc_input, load_tariff_schedules(KE_DIR))
+    calc_input, warnings, unverifiable = withhold_status_dependent_checks(calc_input)
 
-
-@pytest.mark.parametrize("units, energy, status", [
-    (323, 11776.58, "unprotected"),  # above 200 units
-    (323, None, "unprotected"),
-    (181, 5232.71, "unprotected"),   # 181 x 28.91
-    (145, 1639.45, "protected"),     # 100 x 10.54 + 45 x 13.01
-    (40, 158.0, "lifeline"),         # 40 x 3.95
-])
-def test_consumer_status_is_worked_out_from_units_or_printed_rate(units, energy, status):
-    calc_input, warnings, unverifiable = _resolve(units, energy)
-
-    assert calc_input.consumer_status == status
-    assert warnings and status in warnings[0]
-    assert unverifiable == frozenset()
-
-
-@pytest.mark.parametrize("units, energy, qta_blocked", [
-    (145, 2000.0, False),  # matches no status
-    (145, None, False),
-    (80, 999.0, True),     # could be lifeline, which pays no QTA
-])
-def test_unknown_consumer_status_blocks_dependent_charges(units, energy, qta_blocked):
-    _, warnings, unverifiable = _resolve(units, energy)
-
+    assert calc_input.consumer_status == assumed
     assert {"energy", "fixed", "gst", "electricity_duty"} <= unverifiable
     assert ("qta" in unverifiable) is qta_blocked
-    assert "could not tell" in warnings[0]
+    assert "were not checked" in warnings[0]
 
 
 def test_build_calculation_input_warns_when_billing_month_missing():

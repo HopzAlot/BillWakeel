@@ -214,3 +214,11 @@ fixed 600, FC surcharge 62, QTA -288, duty 20, GST 366. Duty is 1.5% of energy p
 on the unprotected IESCO bills, which confirms surcharge rates depend on the consumer. Separately,
 `normalize_disco` only accepted short codes, while the Extraction Agent returns full names, so a
 real uploaded IESCO bill would have been rejected; it now matches both.
+
+## 2026-11-25: Household status inference and extraction prompt v2 reverted until their sprint (SCRUM-31)
+Supersedes point (1) of the "Consumer status, GST base..." entry. Working out lifeline, protected or
+unprotected from one bill belongs to SCRUM-51, so it was removed. We did not go back to guessing
+"protected", which raised false findings: for A-1(a), energy, fixed charge, GST and duty (and QTA at
+100 units or less) are now not checked, with a warning. Cost: household bills get little checking
+until SCRUM-51. Extraction prompt v2 was also reverted (it was never pushed); v1 stays, with its
+known late-payment total bug, for the sprint it was deferred to.

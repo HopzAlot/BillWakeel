@@ -14,7 +14,7 @@ from services.bill_to_tariff import (
     build_calculation_input,
     normalize_disco,
     normalize_tariff_code,
-    resolve_consumer_status,
+    withhold_status_dependent_checks,
 )
 from services.gemini import GeminiError
 from services.tariff_engine import calculate_bill, load_tariff_schedules, select_tariff
@@ -31,8 +31,7 @@ def no_network_gemini(monkeypatch):
     monkeypatch.setattr("agents.grounding.get_llm", _raise)
 
 
-@pytest.mark.parametrize("sample", ["iesco_001", "iesco_002"])
-def test_real_bill_has_no_findings_and_matches_to_the_rupee(sample):
+def _run(sample):
     raw = json.loads((ROOT / "data" / "samples" / f"{sample}.json").read_text())
     extraction = BillExtraction.model_validate(
         {k: v for k, v in raw.items() if k in BillExtraction.model_fields}
@@ -40,14 +39,27 @@ def test_real_bill_has_no_findings_and_matches_to_the_rupee(sample):
     disco = normalize_disco(extraction.provider)
     code = normalize_tariff_code(extraction.tariff_category)
     calc_input, _ = build_calculation_input(extraction, disco, code)
-    schedules = load_tariff_schedules(KE_DIR)
-    calc_input, _, unverifiable = resolve_consumer_status(extraction, calc_input, schedules)
-    calculation = calculate_bill(select_tariff(schedules, calc_input), calc_input)
+    return extraction, calc_input
+
+
+@pytest.mark.parametrize("sample", ["iesco_001", "iesco_002"])
+def test_real_bill_raises_no_findings(sample):
+    extraction, calc_input = _run(sample)
+    calc_input, _, unverifiable = withhold_status_dependent_checks(calc_input)
+    calculation = calculate_bill(select_tariff(load_tariff_schedules(KE_DIR), calc_input), calc_input)
 
     response = grounding.ground_bill(sample, extraction, calculation, unverifiable)
 
-    assert unverifiable == frozenset()
     assert response.findings == []
+
+
+@pytest.mark.parametrize("sample", ["iesco_001", "iesco_002"])
+def test_engine_matches_real_bill_to_the_rupee(sample):
+    # Both bills are unprotected. Set here by hand: the app cannot know it yet (SCRUM-51).
+    extraction, calc_input = _run(sample)
+    calc_input = calc_input.model_copy(update={"consumer_status": "unprotected"})
+    calculation = calculate_bill(select_tariff(load_tariff_schedules(KE_DIR), calc_input), calc_input)
+
     billed = {c.name: c.amount_pkr for c in extraction.charges}
     expected = {t.name: t.amount_pkr for t in calculation.taxes}
     assert expected["GST"] == pytest.approx(billed["GST"], abs=1)
@@ -55,3 +67,4 @@ def test_real_bill_has_no_findings_and_matches_to_the_rupee(sample):
     assert calculation.energy_charge_pkr == pytest.approx(billed["Cost of electricity"], abs=1)
     assert calculation.fixed_charge_pkr == pytest.approx(billed["Fixed charges"], abs=1)
     assert calculation.adjustments[0].amount_pkr == pytest.approx(billed["Qtr tariff adjustment"], abs=1)
+    assert grounding.ground_bill(sample, extraction, calculation).findings == []

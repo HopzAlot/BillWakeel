@@ -25,7 +25,7 @@ from services.bill_to_tariff import (
     build_calculation_input,
     normalize_disco,
     normalize_tariff_code,
-    resolve_consumer_status,
+    withhold_status_dependent_checks,
 )
 from services.gemini import GeminiError
 from services.tariff_engine import (
@@ -268,8 +268,8 @@ async def get_findings(bill_id: str):
         tariff_code = normalize_tariff_code(extraction.tariff_category)
         calc_input, pre_warnings = build_calculation_input(extraction, disco, tariff_code)
         schedules = _load_all_tariff_schedules()
-        calc_input, status_warnings, unverifiable = resolve_consumer_status(
-            extraction, calc_input, schedules
+        calc_input, status_warnings, unverifiable = withhold_status_dependent_checks(
+            calc_input
         )
         tariff = select_tariff(schedules, calc_input)
         calculation = calculate_bill(tariff, calc_input)
