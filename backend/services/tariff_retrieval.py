@@ -199,7 +199,8 @@ def row_tariff_code(row_label: str) -> str | None:
     """The engine's tariff code for a rate-table row label, if it has one."""
     if row_label.startswith("A-1a("):
         return "A-1(a)"  # the guide writes the bill's "A-1a(01)" form
-    for prefix, code in (("Pre-Paid Bulk", "Prepaid Bulk"), ("Pre-Paid Industrial", "Prepaid Industrial")):
+    for prefix, code in (("Pre-Paid Bulk", "Prepaid Bulk"), ("Pre-Paid Industrial", "Prepaid Industrial"),
+                         ("Pre-Paid Agricultural", "Prepaid Agricultural")):
         if row_label.startswith(prefix):
             return code
     letter = re.match(r"^Tariff ([A-Z])\b", row_label)

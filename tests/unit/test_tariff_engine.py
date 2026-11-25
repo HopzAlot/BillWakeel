@@ -395,6 +395,7 @@ def test_ke_lifeline_is_exempt_from_fixed_charge_and_gst(ke_tariffs):
     ("A-1(c)", 42.12),
     ("Prepaid Bulk", 44.87),
     ("K", 42.25),
+    ("Prepaid Agricultural", 33.15),
 ])
 def test_corrected_rates_match_sro_279(ke_tariffs, tariff_code, rate):
     # Annex-A-1 of SRO 279(I)/2026 (data/tariffs/sources/k-electric/)

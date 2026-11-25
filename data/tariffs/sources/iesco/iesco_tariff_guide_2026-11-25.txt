@@ -1,0 +1,95 @@
+Source: https://www.iesco.com.pk/tariff-guide
+Retrieved: 2026-11-25
+Extract of the D (agriculture) to K sections only, as page text:
+
+D - AGRICULTURE TARIFF
+D-1(a)
+SCARP less than 5 kW
+-
+-
+-
+39.87
+D-2(a)
+Agricultural Tube Wells
+-
+400
+-
+28.90
+-
+Peak
+Off-Peak
+D-1(b)
+SCARP 5 kW & above
+-
+400
+42.79
+34.71
+D-2(b)
+Agricultural 5 kW & above
+-
+400
+29.54
+28.69
+Pre-paid Agri & Scarp Supply Tariff
+400
+33.15
+Under this tariff, there shall be minimum monthly charges of Rs.2000/- per consumer per month, even if no energy is consumed.
+Note:- The consumers having sanctioned load less than 5 kW can opt for TOU metering.
+E - TEMPORARY SUPPLY TARIFFS
+E-1(i)
+Residential Supply
+-
+675
+-
+52.89
+E-1(ii)
+Commercial Supply
+5000
+-
+-
+53.44
+E-2
+Industrial Supply
+5000
+-
+-
+42.25
+F - SEASONAL INDUSTRIAL SUPPLY TARIFF
+-
+125% of relevant industrial tariff
+Note:
+Tariff-F consumers will have the option to convert to Regular Tariff and vice versa. This option can be exercised at the time of a new connection or at the beginning of the season. Once exercised , the option remains in force for at least one year.
+G- PUBLIC LIGHTING
+G
+Street Lighting
+2000
+-
+42.91
+125% of relevant industrial tariff
+H - RESIDENTIAL COLONIES ATTACHED TO INDUSTRIAL PREMISES
+H
+Residential Colonies attached to industrial premises
+2000
+-
+-
+42.10
+K - SPECIAL CONTRACTS
+1
+Azad Jammu & Kashmir (AJK)
+-
+1250
+-
+26.45
+Peak
+Off-Peak
+Time Of Use
+-
+1250
+28.85
+25.73
+2
+Rawat Lab
+2000
+-
+-
+42.25

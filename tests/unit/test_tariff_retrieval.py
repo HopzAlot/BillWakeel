@@ -122,6 +122,7 @@ def test_every_superseded_guide_row_exists_and_leaves_the_index(disco_dir):
 @pytest.mark.parametrize("code, rate", [
     ("B-5", 23.13), ("D-2(b)", 28.69), ("E-1(i)", 52.89), ("E-1(ii)", 53.44),
     ("E-2", 42.25), ("G", 42.91), ("H", 42.10), ("K", 42.25),
+    ("Prepaid Agricultural", 33.15),
 ])
 def test_official_rows_are_cited_for_corrected_tariffs(code, rate):
     results = retrieve(f"What is the Energy charges for {code}?", "k-electric",

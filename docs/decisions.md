@@ -174,3 +174,12 @@ so commercial and agricultural findings are kept again. A tax or adjustment clau
 of its own is dropped rather than shown with the SRO 279 link, which does not contain it. Cost:
 IESCO and LESCO Electricity Duty findings are now dropped, since we hold no official source for
 their duty. The GST row states the standard rate only, not exemptions.
+
+## 2026-11-25: Prepaid agricultural tariff added at 33.15; IESCO/LESCO Electricity Duty left uncited (SCRUM-31)
+The SRO 279 scan could be read as 33.15 or 33.18, so the rate was taken from IESCO's own tariff
+guide (headed SRO 279), which prints 33.15 as text and agrees with the other rows checked. For
+IESCO and LESCO Electricity Duty no official document could be opened: punjablaws.gov.pk pages
+returned 404. Search-result excerpts of the Punjab Finance Act 1964 give 1.5% domestic and
+commercial, 1.0% industrial and agricultural, which, if current, means the shared files' 2%
+commercial and 1.5% industrial (K-Electric's rates) are wrong for IESCO and LESCO. Not changed:
+excerpts are not a source, and the files cannot yet hold per-DISCO taxes.

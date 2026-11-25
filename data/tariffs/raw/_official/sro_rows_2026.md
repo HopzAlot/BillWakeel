@@ -20,6 +20,7 @@ Supersedes: B-5 Extra-High Voltage Industrial | D-2(b) Agricultural Tube Wells T
 | Tariff G — Public Lighting | Rs. 2,000 / Cons / M | Rs. 42.91 |
 | Tariff H — Residential Colonies | Rs. 2,000 / Cons / M | Rs. 42.10 |
 | Tariff K — Rawat Lab | Rs. 2,000 / Cons / M | Rs. 42.25 |
+| Pre-Paid Agricultural and SCARP | Rs. 400 / kW / M | Rs. 33.15 |
 
 **2408 Quarterly Tariff Adjustment for December 2025 to February 2026, SRO 2408(I)/2025**
 
