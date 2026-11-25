@@ -20,3 +20,7 @@ data/uploads/
 .DS_Store
 .vscode/
 .idea/
+
+# SQLite database
+data/*.db
+
