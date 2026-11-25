@@ -1,5 +1,5 @@
 """Extraction Agent — reads a bill image/PDF and returns structured data
-via Gemini, grounded by the prompt in prompts/extraction/v2.md.
+via Gemini, grounded by the prompt in prompts/extraction/v1.md.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from config import settings
 from models.bill import BillExtraction, ExtractionResult
 from services.gemini import get_llm, invoke_with_retry
 
-PROMPT_VERSION = "v2"
+PROMPT_VERSION = "v1"
 RETRY_ATTEMPTS = 1
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
