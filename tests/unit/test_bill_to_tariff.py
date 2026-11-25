@@ -9,6 +9,7 @@ from services.bill_to_tariff import (
     normalize_tariff_code,
     resolve_consumer_status,
 )
+from services.charge_names import is_surcharge
 from services.tariff_engine import TariffEngineError, load_tariff_schedules
 
 KE_DIR = Path(__file__).resolve().parents[2] / "data" / "tariffs" / "structured" / "k-electric"
@@ -105,3 +106,15 @@ def test_build_calculation_input_requires_units_consumed():
     extraction = BillExtraction(provider="K-Electric", sanctioned_load_kw=2.0)
     with pytest.raises(TariffEngineError):
         build_calculation_input(extraction, "K-Electric", "B-1(a)")
+
+
+@pytest.mark.parametrize("name, counted", [
+    ("F.C surcharge", True),
+    ("N.J. Surcharge", True),
+    ("Late payment surcharge", False),
+    ("L.P. Surcharge", False),
+    ("GST on FC surcharge", False),
+    ("Fuel price adjustment", False),
+])
+def test_only_supply_surcharges_enter_the_gst_base(name, counted):
+    assert is_surcharge(name) is counted

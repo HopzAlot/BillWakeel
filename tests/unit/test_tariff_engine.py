@@ -344,10 +344,10 @@ def test_ke_protected_domestic_bill(ke_tariffs):
 
     # telescopic: 100 x 10.54 + 50 x 13.01 = 1054 + 650.50 = 1704.50
     # fixed: lands in 101-200 slab, Rs 300/kW x 3 kW = 900
-    # GST 18% of 2604.50 = 468.81, ED 1.5% of 1704.50 = 25.57
+    # ED 1.5% of 1704.50 = 25.57, GST 18% of (2604.50 + 25.57) = 473.41
     assert result.energy_charge_pkr == pytest.approx(1704.50)
     assert result.fixed_charge_pkr == pytest.approx(900)
-    assert result.total_pkr == pytest.approx(3098.88)
+    assert result.total_pkr == pytest.approx(3103.48)
 
 
 def test_ke_unprotected_domestic_bill(ke_tariffs):
@@ -355,9 +355,9 @@ def test_ke_unprotected_domestic_bill(ke_tariffs):
     result = calculate_bill(select_tariff(ke_tariffs, data), data)
 
     # landing slab: all 200 units x 28.91 = 5782; fixed Rs 300/kW x 3 kW = 900
-    # GST 18% of 6682 = 1202.76, ED 1.5% of 5782 = 86.73
+    # ED 1.5% of 5782 = 86.73, GST 18% of (6682 + 86.73) = 1218.37
     assert result.energy_charge_pkr == pytest.approx(5782)
-    assert result.total_pkr == pytest.approx(7971.49)
+    assert result.total_pkr == pytest.approx(7987.10)
 
 
 def test_ke_qta_applies_only_within_its_effective_window(ke_tariffs):

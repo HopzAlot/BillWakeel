@@ -60,7 +60,7 @@
       "name": "GST",
       "type": "percentage",
       "rate": 18,
-      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
     }
   ]
 }

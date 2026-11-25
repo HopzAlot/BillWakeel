@@ -57,13 +57,26 @@
       "name": "GST",
       "type": "percentage",
       "rate": 18,
-      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
     },
     {
       "name": "Electricity Duty",
       "type": "percentage",
       "rate": 1.0,
-      "basis": "Base energy charges only"
+      "basis": "Base energy charges only",
+      "discos": [
+        "K-Electric"
+      ]
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.0,
+      "basis": "Energy charges + quarterly adjustment",
+      "discos": [
+        "IESCO",
+        "LESCO"
+      ]
     }
   ],
   "source": {

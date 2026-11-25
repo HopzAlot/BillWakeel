@@ -13,7 +13,7 @@ import re
 
 from models.bill import BillExtraction
 from models.tariff import DISCO, TariffCalculationInput, TariffSchedule
-from services.charge_names import CHARGE_NAME_ALIASES, normalize_charge_name
+from services.charge_names import CHARGE_NAME_ALIASES, is_surcharge, normalize_charge_name
 from services.tariff_engine import TariffEngineError, calculate_bill, select_tariff
 
 _DISCO_ALIASES: dict[str, DISCO] = {
@@ -85,6 +85,9 @@ def build_calculation_input(
         monthly_units=extraction.units_consumed,
         sanctioned_load_kw=extraction.sanctioned_load_kw,
         billing_month=extraction.billing_month,
+        billed_surcharges_pkr=sum(
+            charge.amount_pkr for charge in extraction.charges if is_surcharge(charge.name)
+        ),
     )
     if extraction.billing_month is None:
         warnings.append(

@@ -12,7 +12,7 @@ Numbers recomputed 2026-11-25 after adding the real Quarterly Tariff
 Adjustment (QTA) to the K-Electric tariff JSON (SCRUM-31, sourced from the
 official Gazette SRO — see data/tariffs/raw/sources.md S07): the QTA now
 changes energy+fixed+adjustments, which GST is a percentage of, so GST's
-expected value moved from 403.10 to 351.27.
+expected value moved from 403.10 to 355.70.
 """
 
 import pytest
@@ -57,7 +57,7 @@ def no_network_gemini(monkeypatch):
     monkeypatch.setattr("agents.grounding.get_llm", _raise)
 
 
-EXACT_GST_PKR = 351.27
+EXACT_GST_PKR = 355.70
 EXACT_QTA_PKR = -287.93
 
 

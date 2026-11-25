@@ -194,3 +194,15 @@ tariff files per DISCO, which would duplicate every rate. Limits: IESCO also ser
 which the Punjab Act does not itself cover and we have not checked; the C (single-point) files keep
 2% for all, since the schedule has no such category, so IESCO/LESCO duty findings there are
 dropped; only Finance Acts were searched, not other government notifications.
+
+## 2026-11-25: Consumer status, GST base and Punjab duty base corrected against real bills (SCRUM-31)
+Both anonymised IESCO bills produced false findings or failed. (1) Status was guessed "protected".
+It is now unprotected above 200 units, otherwise taken from whichever rate reproduces the printed
+energy charge; failing that, dependent charges are not checked. This reads the utility's
+classification and cannot verify it (SCRUM-51 still needed). `FindingsResponse` gained `warnings`.
+(2) GST is charged on the whole supply including surcharges and Electricity Duty. We hold no
+official surcharge rates, so the printed amounts are used and flagged as unchecked; rejected:
+hard-coding Rs 3.23/kWh from two bills and news reports. (3) IESCO and LESCO duty is charged on
+energy plus the quarterly adjustment. Evidence for (2) and (3) is two bills from one DISCO, matching
+to within a rupee. K-Electric's duty base is unchanged for want of a K-Electric bill. The earlier
+seeded eval missed all of this because its "clean" amounts came from the engine.

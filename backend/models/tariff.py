@@ -189,3 +189,7 @@ class TariffCalculationInput(BaseModel):
     # decide whether a time-bounded TariffAdjustment (see above) applies;
     # without it, such adjustments are skipped, not guessed.
     billing_month: str | None = None
+
+    # Surcharges as printed on the bill (e.g. F.C surcharge). We hold no
+    # rates for them, so they are not checked, but GST is charged on them.
+    billed_surcharges_pkr: float = 0.0

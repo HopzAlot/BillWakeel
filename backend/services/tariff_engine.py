@@ -42,6 +42,8 @@ TAX_BASES = {
     "fixed_charge": "fixed_charge",
     "subtotal": "subtotal",
     "Energy charges + fixed charges + applicable electricity adjustments": "subtotal",
+    "Energy, fixed charges, adjustments, surcharges and Electricity Duty": "value_of_supply",
+    "Energy charges + quarterly adjustment": "energy_and_adjustments",
 }
 
 # Provisional: a recalculated total within this many rupees of the billed
@@ -348,22 +350,45 @@ def calculate_bill(
         energy + fixed + topup + sum(a.amount_pkr for a in adjustments)
     )
 
-    bases = {"energy_charge": energy, "fixed_charge": fixed, "subtotal": subtotal}
-    taxes = []
-    for tax in tariff.taxes:
-        if tax.discos is not None and data.disco not in tax.discos:
-            continue
+    surcharges = _money(data.billed_surcharges_pkr)
+    if surcharges:
+        warnings = warnings + [
+            f"surcharges of Rs. {surcharges:.2f} were taken from the bill and not checked"
+        ]
+    bases = {
+        "energy_charge": energy,
+        "fixed_charge": fixed,
+        "subtotal": subtotal,
+        "energy_and_adjustments": _money(energy + sum(a.amount_pkr for a in adjustments)),
+    }
+
+    applicable = [
+        t for t in tariff.taxes if t.discos is None or data.disco in t.discos
+    ]
+    amounts: dict[int, float] = {}
+    # GST is charged on the other taxes too, so it is worked out last.
+    for i, tax in sorted(
+        enumerate(applicable), key=lambda pair: TAX_BASES.get(pair[1].basis) == "value_of_supply"
+    ):
         if tax.type == "fixed":
             amount = tax.rate
         elif tax.basis in TAX_BASES:
-            amount = bases[TAX_BASES[tax.basis]] * tax.rate / 100
+            base = TAX_BASES[tax.basis]
+            if base == "value_of_supply":
+                value = subtotal + surcharges + sum(amounts.values())
+            else:
+                value = bases[base]
+            amount = value * tax.rate / 100
         else:
             raise TariffEngineError(
                 f"tax '{tax.name}' has unsupported basis '{tax.basis}'"
             )
-        taxes.append(ChargeItem(name=tax.name, amount_pkr=_money(amount)))
+        amounts[i] = _money(amount)
+    taxes = [
+        ChargeItem(name=tax.name, amount_pkr=amounts[i]) for i, tax in enumerate(applicable)
+    ]
 
-    total = _money(subtotal + sum(t.amount_pkr for t in taxes))
+    total = _money(subtotal + surcharges + sum(t.amount_pkr for t in taxes))
 
     return BillCalculation(
         disco=data.disco,

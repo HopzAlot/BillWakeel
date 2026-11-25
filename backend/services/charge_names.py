@@ -26,5 +26,14 @@ CHARGE_NAME_ALIASES: dict[str, str] = {
 }
 
 
+def is_surcharge(name: str) -> bool:
+    """A levy added to the bill that GST applies to, e.g. "F.C surcharge".
+    Late payment surcharge and tax-on-tax lines are not part of the supply.
+    """
+    # "L.P." normalises to two words, so rejoin it before checking.
+    words = re.sub(r"\bl p\b", "lp", normalize_charge_name(name)).split()
+    return "surcharge" in words and not {"late", "lp", "gst", "ed", "on"} & set(words)
+
+
 def normalize_charge_name(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", name.strip().lower()).strip()
