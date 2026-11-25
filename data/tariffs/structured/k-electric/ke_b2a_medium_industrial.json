@@ -26,25 +26,63 @@
     "rate_pkr": 1250
   },
   "minimum_monthly_charge_pkr": null,
-  "adjustments": [],
+  "adjustments": [
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3298,
+      "effective_from_month": "2025-12",
+      "effective_to_month": "2026-02"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3504,
+      "effective_from_month": "2026-03",
+      "effective_to_month": "2026-05"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": -1.9857,
+      "effective_from_month": "2026-06",
+      "effective_to_month": "2026-08"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.5194,
+      "effective_from_month": "2026-09",
+      "effective_to_month": "2026-11"
+    }
+  ],
   "taxes": [
     {
       "name": "GST",
       "type": "percentage",
       "rate": 18,
-      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
     },
     {
       "name": "Electricity Duty",
       "type": "percentage",
       "rate": 1.5,
-      "basis": "Base energy charges only"
+      "basis": "Base energy charges only",
+      "discos": [
+        "K-Electric"
+      ]
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.0,
+      "basis": "Energy charges + quarterly adjustment",
+      "discos": [
+        "IESCO",
+        "LESCO"
+      ]
     }
   ],
   "source": {
-    "url": "https://ke.com.pk/customer-services/tariff-structure",
-    "retrieved_on": "2026-11-21",
-    "document_name": "Pakistan Electricity and Gas Tariffs Complete Guide 2026 (secondary compilation; official verification pending)",
+    "url": "https://ke.com.pk/wp-content/uploads/2026/02/SRO-279I-dated-Feb-12-2026-2.pdf",
+    "retrieved_on": "2026-11-25",
+    "document_name": "SRO 279(I)/2026 dated 12 Feb 2026, Annex-A-1 (XWDISCOs) and Annex-C (K-Electric): rates and fixed charges checked 2026-11-25. Taxes and quarterly adjustments come from other sources, see data/tariffs/raw/sources.md",
     "clause": "B-2(a) Medium Industrial Regular; Calendar Year 2026"
   }
 }

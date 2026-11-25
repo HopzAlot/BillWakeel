@@ -81,12 +81,32 @@ class TariffAdjustment(BaseModel):
     name: str
     rate_pkr_per_unit: float
 
+    # "YYYY-MM", inclusive on both ends. None means unbounded in that
+    # direction. Most adjustments (FCA/FPA monthly, QTA quarterly) are
+    # only correct for a specific window, unlike the slabs/taxes around
+    # them, which hold for the whole TariffSchedule's effective period.
+    effective_from_month: str | None = None
+    effective_to_month: str | None = None
+
+    @model_validator(mode="after")
+    def validate_window(self):
+        if (
+            self.effective_from_month is not None
+            and self.effective_to_month is not None
+            and self.effective_to_month < self.effective_from_month
+        ):
+            raise ValueError("effective_to_month cannot be earlier than effective_from_month")
+        return self
+
 
 class TariffTax(BaseModel):
     name: str
     type: Literal["percentage", "fixed"]
     rate: float = Field(ge=0)
     basis: str
+    # None means every DISCO on the schedule. Set where provincial rates
+    # differ, e.g. Electricity Duty in Sindh (K-Electric) and Punjab.
+    discos: list[DISCO] | None = None
 
 
 class TariffSource(BaseModel):
@@ -122,6 +142,9 @@ class TariffSchedule(BaseModel):
 
     fixed_charge: TariffFixedCharge | None = None
     minimum_monthly_charge_pkr: float | None = Field(default=None, ge=0)
+    # True when the minimum is a floor on energy + fixed charges (agricultural
+    # D tariffs). False: it only applies to bills with no fixed charge.
+    minimum_charge_includes_fixed: bool = False
 
     adjustments: list[TariffAdjustment] = Field(default_factory=list)
     taxes: list[TariffTax] = Field(default_factory=list)
@@ -161,3 +184,12 @@ class TariffCalculationInput(BaseModel):
     mdi_kw: float | None = Field(default=None, ge=0)
     peak_units: float | None = Field(default=None, ge=0)
     off_peak_units: float | None = Field(default=None, ge=0)
+
+    # "YYYY-MM", same format as BillExtraction.billing_month. Needed to
+    # decide whether a time-bounded TariffAdjustment (see above) applies;
+    # without it, such adjustments are skipped, not guessed.
+    billing_month: str | None = None
+
+    # Surcharges as printed on the bill (e.g. F.C surcharge). We hold no
+    # rates for them, so they are not checked, but GST is charged on them.
+    billed_surcharges_pkr: float = 0.0

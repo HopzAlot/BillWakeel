@@ -32,13 +32,13 @@
       "name": "GST",
       "type": "percentage",
       "rate": 18,
-      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
     }
   ],
   "source": {
-    "url": "https://ke.com.pk/customer-services/tariff-structure",
-    "retrieved_on": "2026-11-21",
-    "document_name": "Pakistan Electricity and Gas Tariffs Complete Guide 2026 (secondary compilation; official verification pending)",
+    "url": "https://ke.com.pk/wp-content/uploads/2026/02/SRO-279I-dated-Feb-12-2026-2.pdf",
+    "retrieved_on": "2026-11-25",
+    "document_name": "SRO 279(I)/2026 dated 12 Feb 2026, Annex-A-1 (XWDISCOs) and Annex-C (K-Electric): rates and fixed charges checked 2026-11-25. Taxes and quarterly adjustments come from other sources, see data/tariffs/raw/sources.md",
     "clause": "A-3(c) Prepaid General Services; Calendar Year 2026"
   }
 }

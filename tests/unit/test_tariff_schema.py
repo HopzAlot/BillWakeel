@@ -114,7 +114,7 @@ def test_all_ke_tariff_json_records_validate():
 
     json_files = sorted(tariff_folder.glob("*.json"))
 
-    assert len(json_files) == 39
+    assert len(json_files) == 40
 
     for json_path in json_files:
         with json_path.open(encoding="utf-8-sig") as file:

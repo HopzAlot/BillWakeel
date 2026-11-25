@@ -26,6 +26,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from models.tariff import (
+    TariffAdjustment,
     TariffCalculationInput,
     TariffFixedCharge,
     TariffSchedule,
@@ -41,6 +42,8 @@ TAX_BASES = {
     "fixed_charge": "fixed_charge",
     "subtotal": "subtotal",
     "Energy charges + fixed charges + applicable electricity adjustments": "subtotal",
+    "Energy, fixed charges, adjustments, surcharges and Electricity Duty": "value_of_supply",
+    "Energy charges + quarterly adjustment": "energy_and_adjustments",
 }
 
 # Provisional: a recalculated total within this many rupees of the billed
@@ -135,6 +138,50 @@ def _load_warnings(tariff: TariffSchedule, data: TariffCalculationInput) -> list
             f"range ({low} to {high} kW)"
         ]
     return []
+
+
+def _filter_adjustments(
+    adjustments: list[TariffAdjustment], billing_month: str | None
+) -> tuple[list[TariffAdjustment], list[str]]:
+    """Split a tariff's adjustments into (applicable, warnings).
+
+    An adjustment with no effective window always applies. One with a
+    window is skipped - with a warning, not a silent drop - if the bill
+    has no billing_month to check it against, or if billing_month falls
+    outside the window. Applying it anyway would be guessing; NEPRA
+    adjustments are time-bound by design (FCA monthly, QTA quarterly).
+    """
+    applicable: list[TariffAdjustment] = []
+    skipped: dict[str, list[str]] = {}
+
+    for adjustment in adjustments:
+        start, end = adjustment.effective_from_month, adjustment.effective_to_month
+        unbounded = start is None and end is None
+        in_range = billing_month is not None and (
+            start is None or billing_month >= start
+        ) and (end is None or billing_month <= end)
+        if unbounded or in_range:
+            applicable.append(adjustment)
+        else:
+            skipped.setdefault(adjustment.name, []).append(
+                f"{start or '...'} to {end or '...'}"
+            )
+
+    # A name with another window that does apply is not worth a warning.
+    for adjustment in applicable:
+        skipped.pop(adjustment.name, None)
+
+    reason = (
+        "this bill has no billing_month to check against"
+        if billing_month is None
+        else f"billing_month {billing_month} is outside every window"
+    )
+    warnings = [
+        f"'{name}' not applied ({', '.join(windows)}): {reason}"
+        for name, windows in skipped.items()
+    ]
+
+    return applicable, warnings
 
 
 # --- energy charge -----------------------------------------------------------
@@ -281,34 +328,67 @@ def calculate_bill(
 
     minimum = tariff.minimum_monthly_charge_pkr
     topup = 0.0
-    if minimum is not None and fixed == 0 and energy < minimum:
-        topup = _money(minimum - energy)
+    if (
+        minimum is not None
+        and (fixed == 0 or tariff.minimum_charge_includes_fixed)
+        and energy + fixed < minimum
+    ):
+        topup = _money(minimum - energy - fixed)
 
+    applicable_adjustments, adjustment_warnings = _filter_adjustments(
+        tariff.adjustments, data.billing_month
+    )
+    warnings = warnings + adjustment_warnings
     adjustments = [
         ChargeItem(
             name=adjustment.name,
             amount_pkr=_money(adjustment.rate_pkr_per_unit * data.monthly_units),
         )
-        for adjustment in tariff.adjustments
+        for adjustment in applicable_adjustments
     ]
     subtotal = _money(
         energy + fixed + topup + sum(a.amount_pkr for a in adjustments)
     )
 
-    bases = {"energy_charge": energy, "fixed_charge": fixed, "subtotal": subtotal}
-    taxes = []
-    for tax in tariff.taxes:
+    surcharges = _money(data.billed_surcharges_pkr)
+    if surcharges:
+        warnings = warnings + [
+            f"surcharges of Rs. {surcharges:.2f} were taken from the bill and not checked"
+        ]
+    bases = {
+        "energy_charge": energy,
+        "fixed_charge": fixed,
+        "subtotal": subtotal,
+        "energy_and_adjustments": _money(energy + sum(a.amount_pkr for a in adjustments)),
+    }
+
+    applicable = [
+        t for t in tariff.taxes if t.discos is None or data.disco in t.discos
+    ]
+    amounts: dict[int, float] = {}
+    # GST is charged on the other taxes too, so it is worked out last.
+    for i, tax in sorted(
+        enumerate(applicable), key=lambda pair: TAX_BASES.get(pair[1].basis) == "value_of_supply"
+    ):
         if tax.type == "fixed":
             amount = tax.rate
         elif tax.basis in TAX_BASES:
-            amount = bases[TAX_BASES[tax.basis]] * tax.rate / 100
+            base = TAX_BASES[tax.basis]
+            if base == "value_of_supply":
+                value = subtotal + surcharges + sum(amounts.values())
+            else:
+                value = bases[base]
+            amount = value * tax.rate / 100
         else:
             raise TariffEngineError(
                 f"tax '{tax.name}' has unsupported basis '{tax.basis}'"
             )
-        taxes.append(ChargeItem(name=tax.name, amount_pkr=_money(amount)))
+        amounts[i] = _money(amount)
+    taxes = [
+        ChargeItem(name=tax.name, amount_pkr=amounts[i]) for i, tax in enumerate(applicable)
+    ]
 
-    total = _money(subtotal + sum(t.amount_pkr for t in taxes))
+    total = _money(subtotal + surcharges + sum(t.amount_pkr for t in taxes))
 
     return BillCalculation(
         disco=data.disco,

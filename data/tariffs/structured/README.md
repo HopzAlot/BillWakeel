@@ -1,42 +1,34 @@
 # Structured Tariff Data
 
-This directory contains structured tariff JSON files for electricity distribution companies (DISCOs).
+One JSON file per tariff category, validated by `backend/models/tariff.py` and read by
+`backend/services/tariff_engine.py`. All files sit in `k-electric/`, but each lists the DISCOs it
+applies to: K-Electric, IESCO and LESCO share the government's uniform schedule. `ke_tariff.json`
+is the A-1(a) protected household schedule and is used in calculations like the others.
 
-## Current Status
-
-The `ke_tariff.json` file is a placeholder template for development and schema validation.
-
-**It does not contain official K-Electric tariff rates and must not be used for bill calculations.**
-
-## Tariff JSON Fields
+## Fields
 
 | Field | Description |
 |---|---|
-| `disco` | Distribution company name |
-| `tariff_category` | Applicable consumer tariff category |
-| `effective_from` | Tariff start date |
-| `effective_to` | Tariff end date, if applicable |
-| `slabs` | Consumption ranges and per-unit rates |
-| `fixed_charge_pkr` | Fixed charge in PKR |
-| `adjustments` | FCA, FPA, or QTA adjustments |
-| `taxes` | Applicable taxes and their calculation basis |
-| `source` | Official document URL, retrieval date, and reference |
+| `discos` | DISCOs the schedule applies to |
+| `tariff_code`, `tariff_category` | Code printed on the bill, and its category |
+| `consumer_status` | `lifeline`, `protected` or `unprotected`; only A-1(a) splits by it |
+| `billing_method`, `metering_type` | `telescopic`, `landing_slab` or `flat`; `regular`, `tou` or `prepaid` |
+| `effective_from`, `effective_to` | Dates the schedule applies |
+| `slabs` | Unit ranges, per-unit rates and any per-slab fixed charge |
+| `fixed_charge` | Amount and calculation method |
+| `minimum_monthly_charge_pkr`, `minimum_charge_includes_fixed` | Minimum bill, and whether the fixed charge counts towards it |
+| `adjustments` | Quarterly adjustments, each limited to its billing months |
+| `taxes` | Rate and base; `discos` limits a line to some DISCOs (provincial duty) |
+| `source` | Document, link and retrieval date |
 
-## Data Requirements
+## Sources and checks
 
-Before adding production tariff records:
+Rates and fixed charges were checked against SRO 279(I)/2026. Where each other number comes from is
+listed in `../raw/sources.md`; reasoning and known limits are in `docs/decisions.md`.
 
-1. Obtain official tariff documents.
-2. Verify slab limits and rates against the source.
-3. Confirm fixed charges, adjustments, and tax rules.
-4. Record effective dates and source metadata.
-5. Validate each JSON file against `backend/models/tariff.py`.
+## Keeping it current
 
-## Pending Confirmations
-
-- Final schema field names and structure: pending team approval.
-- Tax calculation basis: pending confirmation.
-- Adjustment representation: pending confirmation.
-- Official K-Electric tariff data: pending source documents.
-
-Do not replace placeholder values with assumed tariff information.
+- A quarterly adjustment is recorded for December 2025 to November 2026. Add each new one to every
+  file that has `adjustments`, and add its row to `../raw/_official/sro_rows_2026.md`.
+- Never fill a value from memory, a news report or a calculator website. Use a notification or an
+  official page, and record it in `../raw/sources.md`.

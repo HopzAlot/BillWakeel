@@ -3,7 +3,9 @@ turns SDK errors into GeminiError. Agents call get_llm() - don't import
 langchain_google_genai or read env vars directly.
 """
 
+import threading
 import time
+from collections import deque
 
 from google.genai.errors import ServerError
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -18,6 +20,30 @@ RETRY_WAIT_SECONDS = 2
 
 class GeminiError(Exception):
     """Client setup or call failure. Callers map this to an HTTP 502."""
+
+
+# Start times of this process's calls in the last minute.
+_recent_calls: deque[float] = deque()
+_calls_lock = threading.Lock()
+
+
+def _reserve_call() -> None:
+    """Refuse a call that would exceed the per-minute limit.
+
+    It fails at once rather than waiting: the endpoints call Gemini
+    synchronously, so sleeping here would stall the whole server. Per
+    process only, and the daily limit is not tracked.
+    """
+    with _calls_lock:
+        now = time.monotonic()
+        while _recent_calls and now - _recent_calls[0] >= 60:
+            _recent_calls.popleft()
+        if len(_recent_calls) >= settings.gemini_rpm:
+            raise GeminiError(
+                f"Gemini rate limit of {settings.gemini_rpm} calls a minute reached; "
+                "try again shortly."
+            )
+        _recent_calls.append(now)
 
 
 def get_llm(temperature: float = 0.0) -> ChatGoogleGenerativeAI:
@@ -54,6 +80,7 @@ def invoke_with_retry(llm: ChatGoogleGenerativeAI, prompt):
     """Retry once on a 5xx. 4xx failures (bad key, quota, model not found)
     aren't retried - a second attempt won't fix those."""
     for attempt in range(RETRY_ATTEMPTS + 1):
+        _reserve_call()
         try:
             return llm.invoke(prompt)
         except ServerError as e:
