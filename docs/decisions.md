@@ -206,3 +206,11 @@ hard-coding Rs 3.23/kWh from two bills and news reports. (3) IESCO and LESCO dut
 energy plus the quarterly adjustment. Evidence for (2) and (3) is two bills from one DISCO, matching
 to within a rupee. K-Electric's duty base is unchanged for want of a K-Electric bill. The earlier
 seeded eval missed all of this because its "clean" amounts came from the engine.
+
+## 2026-11-25: Tax bases also match a HAZECO bill; full company names accepted (SCRUM-31)
+Adds evidence to the entry above: sample hazeco_001 (A-1a protected, 145 units) prints energy 1639,
+fixed 600, FC surcharge 62, QTA -288, duty 20, GST 366. Duty is 1.5% of energy plus QTA, and GST is
+18% of energy, fixed, surcharge, QTA and duty. Its surcharge is about Rs 0.43/kWh, unlike the 3.23
+on the unprotected IESCO bills, which confirms surcharge rates depend on the consumer. Separately,
+`normalize_disco` only accepted short codes, while the Extraction Agent returns full names, so a
+real uploaded IESCO bill would have been rejected; it now matches both.

@@ -23,15 +23,22 @@ KE_DIR = Path(__file__).resolve().parents[2] / "data" / "tariffs" / "structured"
         ("KE", "K-Electric"),
         ("IESCO", "IESCO"),
         ("lesco", "LESCO"),
+        # as the Extraction Agent actually returns them
+        ("ISLAMABAD ELECTRIC SUPPLY COMPANY (LTD).", "IESCO"),
+        ("Lahore Electric Supply Company Limited", "LESCO"),
+        ("K-Electric Limited", "K-Electric"),
     ],
 )
 def test_normalize_disco_known_aliases(provider, expected):
     assert normalize_disco(provider) == expected
 
 
-def test_normalize_disco_rejects_unsupported_provider():
+@pytest.mark.parametrize("provider", [
+    "HAZECO", "HAZARA ELECTRIC SUPPLY COMPANY", "Hyderabad Electric Supply Company", None,
+])
+def test_normalize_disco_rejects_unsupported_provider(provider):
     with pytest.raises(TariffEngineError):
-        normalize_disco("HAZECO")
+        normalize_disco(provider)
 
 
 @pytest.mark.parametrize(

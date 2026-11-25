@@ -16,14 +16,6 @@ from models.tariff import DISCO, TariffCalculationInput, TariffSchedule
 from services.charge_names import CHARGE_NAME_ALIASES, is_surcharge, normalize_charge_name
 from services.tariff_engine import TariffEngineError, calculate_bill, select_tariff
 
-_DISCO_ALIASES: dict[str, DISCO] = {
-    "k-electric": "K-Electric",
-    "k-electric (ke)": "K-Electric",
-    "ke": "K-Electric",
-    "iesco": "IESCO",
-    "lesco": "LESCO",
-}
-
 # "A-1a(01)" (how the Extraction Agent writes a category it read off a bill)
 # -> letter "A", number "1", sub-letter "a". Also accepts the tariff JSON's
 # own already-bracketed form ("A-1(a)") via the optional parens. Codes with
@@ -44,14 +36,24 @@ _PROTECTED_MAX_UNITS = 200
 _ENERGY_MATCH_TOLERANCE_PKR = 1.0
 
 
+# Bills print the company's full name, often with "Ltd" or the short code
+# in brackets, so these are matched anywhere in what was read.
+_DISCO_PATTERNS: list[tuple[str, DISCO]] = [
+    (r"\biesco\b|\bislamabad electric supply\b", "IESCO"),
+    (r"\blesco\b|\blahore electric supply\b", "LESCO"),
+    (r"\bk electric\b|\bke\b|\bkarachi electric\b", "K-Electric"),
+]
+
+
 def normalize_disco(provider: str | None) -> DISCO:
-    disco = _DISCO_ALIASES.get((provider or "").strip().lower())
-    if disco is None:
+    words = normalize_charge_name(provider or "")
+    found = {disco for pattern, disco in _DISCO_PATTERNS if re.search(pattern, words)}
+    if len(found) != 1:
         raise TariffEngineError(
             f"'{provider}' is not a supported DISCO this sprint "
             "(K-Electric, IESCO, LESCO only)."
         )
-    return disco
+    return found.pop()
 
 
 def normalize_tariff_code(tariff_category: str | None) -> str:
