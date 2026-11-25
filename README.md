@@ -157,6 +157,7 @@ Configure the project-root `.env` file with the following settings:
 ```dotenv
 GOOGLE_API_KEY=your_google_api_key
 GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_RPM=15
 FRONTEND_ORIGIN=http://localhost:5173
 MAX_UPLOAD_MB=10
 UPLOAD_DIR=data/uploads

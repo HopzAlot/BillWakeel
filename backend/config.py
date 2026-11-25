@@ -23,6 +23,8 @@ class Settings:
         self.gemini_model: str = os.getenv(
             "GEMINI_MODEL", "gemini-3.5-flash-lite"
         )
+        # Free-tier calls per minute for the default model.
+        self.gemini_rpm: int = int(os.getenv("GEMINI_RPM", "15"))
         self.frontend_origin: str = os.getenv(
             "FRONTEND_ORIGIN", "http://localhost:5173"
         )
