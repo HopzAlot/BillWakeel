@@ -150,34 +150,34 @@ def _filter_adjustments(
     adjustments are time-bound by design (FCA monthly, QTA quarterly).
     """
     applicable: list[TariffAdjustment] = []
-    warnings: list[str] = []
+    skipped: dict[str, list[str]] = {}
 
     for adjustment in adjustments:
-        window = f"{adjustment.effective_from_month or '...'} to {adjustment.effective_to_month or '...'}"
-
-        if adjustment.effective_from_month is None and adjustment.effective_to_month is None:
-            applicable.append(adjustment)
-            continue
-
-        if billing_month is None:
-            warnings.append(
-                f"'{adjustment.name}' not applied: it only applies {window}, "
-                "but this bill has no billing_month to check against"
-            )
-            continue
-
-        in_range = (
-            adjustment.effective_from_month is None or billing_month >= adjustment.effective_from_month
-        ) and (
-            adjustment.effective_to_month is None or billing_month <= adjustment.effective_to_month
-        )
-        if in_range:
+        start, end = adjustment.effective_from_month, adjustment.effective_to_month
+        unbounded = start is None and end is None
+        in_range = billing_month is not None and (
+            start is None or billing_month >= start
+        ) and (end is None or billing_month <= end)
+        if unbounded or in_range:
             applicable.append(adjustment)
         else:
-            warnings.append(
-                f"'{adjustment.name}' not applied: billing_month {billing_month} "
-                f"is outside its {window} window"
+            skipped.setdefault(adjustment.name, []).append(
+                f"{start or '...'} to {end or '...'}"
             )
+
+    # A name with another window that does apply is not worth a warning.
+    for adjustment in applicable:
+        skipped.pop(adjustment.name, None)
+
+    reason = (
+        "this bill has no billing_month to check against"
+        if billing_month is None
+        else f"billing_month {billing_month} is outside every window"
+    )
+    warnings = [
+        f"'{name}' not applied ({', '.join(windows)}): {reason}"
+        for name, windows in skipped.items()
+    ]
 
     return applicable, warnings
 
@@ -326,8 +326,12 @@ def calculate_bill(
 
     minimum = tariff.minimum_monthly_charge_pkr
     topup = 0.0
-    if minimum is not None and fixed == 0 and energy < minimum:
-        topup = _money(minimum - energy)
+    if (
+        minimum is not None
+        and (fixed == 0 or tariff.minimum_charge_includes_fixed)
+        and energy + fixed < minimum
+    ):
+        topup = _money(minimum - energy - fixed)
 
     applicable_adjustments, adjustment_warnings = _filter_adjustments(
         tariff.adjustments, data.billing_month

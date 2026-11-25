@@ -373,9 +373,9 @@ def test_ke_qta_applies_only_within_its_effective_window(ke_tariffs):
     )
     assert not any("not applied" in w for w in in_window.warnings)
 
-    before_window = calculate_bill(tariff, ke_input(billing_month="2026-03"))
-    assert before_window.adjustments == []
-    assert any("not applied" in w and "2026-03" in w for w in before_window.warnings)
+    outside = calculate_bill(tariff, ke_input(billing_month="2026-12"))
+    assert outside.adjustments == []
+    assert any("not applied" in w and "2026-12" in w for w in outside.warnings)
 
     no_billing_month = calculate_bill(tariff, ke_input())
     assert no_billing_month.adjustments == []
@@ -394,8 +394,9 @@ def test_ke_lifeline_is_exempt_from_fixed_charge_and_gst(ke_tariffs):
 @pytest.mark.parametrize("tariff_code,rate", [
     ("A-1(c)", 42.12),
     ("Prepaid Bulk", 44.87),
+    ("K", 42.25),
 ])
-def test_prepaid_rates_match_sro_279(ke_tariffs, tariff_code, rate):
+def test_corrected_rates_match_sro_279(ke_tariffs, tariff_code, rate):
     # Annex-A-1 of SRO 279(I)/2026 (data/tariffs/sources/k-electric/)
     tariff = next(t for t in ke_tariffs if t.tariff_code == tariff_code)
     assert [slab.rate_per_unit_pkr for slab in tariff.slabs] == [rate]
@@ -412,6 +413,30 @@ def test_minimum_monthly_charge_applies_with_zero_units(
                     consumer_status=status, monthly_units=0)
     result = calculate_bill(select_tariff(ke_tariffs, data), data)
     assert result.subtotal_pkr == pytest.approx(minimum)
+
+
+@pytest.mark.parametrize("month,rate", [
+    ("2026-01", 0.3298),
+    ("2026-04", 0.3504),
+    ("2026-07", -1.9857),
+    ("2026-11", 0.5194),
+])
+def test_ke_qta_rate_follows_the_billing_quarter(ke_tariffs, month, rate):
+    tariff = select_tariff(ke_tariffs, ke_input())
+    result = calculate_bill(tariff, ke_input(billing_month=month))
+
+    assert [a.amount_pkr for a in result.adjustments] == [pytest.approx(150 * rate, abs=0.01)]
+    assert not any("not applied" in w for w in result.warnings)
+
+
+@pytest.mark.parametrize("units,subtotal", [
+    (0, 2000),       # fixed 400 x 3 kW = 1200, topped up to the minimum
+    (100, 4090),     # 2890 energy + 1200 fixed, already above it
+])
+def test_agricultural_minimum_is_a_floor_on_energy_plus_fixed(ke_tariffs, units, subtotal):
+    data = ke_input(tariff_code="D-2(a)", consumer_status=None, monthly_units=units)
+    result = calculate_bill(select_tariff(ke_tariffs, data), data)
+    assert result.subtotal_pkr == pytest.approx(subtotal)
 
 
 def test_select_tariff_needs_consumer_status_for_domestic(ke_tariffs):

@@ -133,3 +133,17 @@ engine only tops up when there is no fixed charge. Still open: K-Electric Rawat 
 33.75, which does not match the scanned schedule (appears to be 42.25, not yet confirmed by a
 person); no file exists for prepaid agricultural/SCARP supply; Annex-C also prints non-TOU B-3 (27.00) and
 B-4 (26.43) rows for K-Electric that Annex-A-1 does not and our files do not carry.
+
+## 2026-11-25: Quarterly adjustments cover Dec 2025 to Nov 2026; agricultural minimum is a floor (SCRUM-31)
+The tariff files held only the June-August 2026 adjustment, so bills from other months were
+recalculated without one. Added SRO 2408 (+0.3298, Dec 2025-Feb 2026), SRO 459 (+0.3504, Mar-May)
+and SRO 1501(I) (+0.5194, Sep-Nov); each notification extends to K-Electric. The KE page's
+"SRO 150" is SRO 1501(I), so base rates are unchanged. Windows are matched on `billing_month`;
+a late-issued bill may legitimately carry an adjustment a month later, which the engine does not
+model, and SROs 459/953/1501 also exclude incremental-consumption units, which bills do not
+identify to us. Nothing is recorded after November 2026. Added `minimum_charge_includes_fixed`
+so the Rs. 2,000 agricultural minimum applies as a floor on energy plus fixed charges: this is our
+reading of "minimum monthly charges ... even if no energy is consumed", chosen because the
+schedule's A-1 note excludes fixed-charge consumers and the D note does not. This supersedes the
+engine limit in the SRO 279 entry above. Tariff `source` fields now point at SRO 279. Not added:
+K-Electric non-TOU B-3/B-4 rows (same codes as the TOU files, so lookup would become ambiguous).

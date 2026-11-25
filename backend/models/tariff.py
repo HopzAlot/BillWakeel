@@ -139,6 +139,9 @@ class TariffSchedule(BaseModel):
 
     fixed_charge: TariffFixedCharge | None = None
     minimum_monthly_charge_pkr: float | None = Field(default=None, ge=0)
+    # True when the minimum is a floor on energy + fixed charges (agricultural
+    # D tariffs). False: it only applies to bills with no fixed charge.
+    minimum_charge_includes_fixed: bool = False
 
     adjustments: list[TariffAdjustment] = Field(default_factory=list)
     taxes: list[TariffTax] = Field(default_factory=list)

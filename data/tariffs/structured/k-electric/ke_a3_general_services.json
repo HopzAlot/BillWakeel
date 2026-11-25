@@ -29,9 +29,27 @@
   "adjustments": [
     {
       "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3298,
+      "effective_from_month": "2025-12",
+      "effective_to_month": "2026-02"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3504,
+      "effective_from_month": "2026-03",
+      "effective_to_month": "2026-05"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
       "rate_pkr_per_unit": -1.9857,
       "effective_from_month": "2026-06",
       "effective_to_month": "2026-08"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.5194,
+      "effective_from_month": "2026-09",
+      "effective_to_month": "2026-11"
     }
   ],
   "taxes": [
@@ -43,9 +61,9 @@
     }
   ],
   "source": {
-    "url": "https://ke.com.pk/customer-services/tariff-structure",
-    "retrieved_on": "2026-11-21",
-    "document_name": "Pakistan Electricity and Gas Tariffs Complete Guide 2026 (secondary compilation; official verification pending)",
+    "url": "https://ke.com.pk/wp-content/uploads/2026/02/SRO-279I-dated-Feb-12-2026-2.pdf",
+    "retrieved_on": "2026-11-25",
+    "document_name": "SRO 279(I)/2026 dated 12 Feb 2026, Annex-A-1 (XWDISCOs) and Annex-C (K-Electric): rates and fixed charges checked 2026-11-25. Taxes and quarterly adjustments come from other sources, see data/tariffs/raw/sources.md",
     "clause": "A-3(a) General Services; Calendar Year 2026"
   }
 }

@@ -5,13 +5,12 @@ clause (SCRUM-30). A discrepancy with no verifiable clause is dropped
 before the LLM ever sees it — citation verification is a gate in code,
 not a prompt instruction the model could ignore.
 
-Known gap, not a bug: as of 2026-11-25 only K-Electric's Quarterly Tariff
-Adjustment (QTA) is modeled in `adjustments` (sourced from the official
-Gazette SRO, see data/tariffs/raw/sources.md S07), and only for non-
-lifeline, non-prepaid K-Electric consumers. It's time-bounded (June-
-August 2026 only) via `TariffAdjustment.effective_from_month`/
-`effective_to_month` — the engine skips it, with a warning, for any bill
-whose `billing_month` falls outside that window or isn't known at all.
+Known gap, not a bug: the tariff JSON's `adjustments` hold only the
+Quarterly Tariff Adjustment (QTA), four time-bounded windows covering
+December 2025 to November 2026 (data/tariffs/raw/sources.md S07 and
+S10-S12), for non-lifeline, non-prepaid consumers. The engine skips it,
+with a warning, for any bill whose `billing_month` is outside every
+window or isn't known.
 FCA/FPA (changes monthly, no single rate to record) and the FC/NJ
 surcharges (slab-dependent, published as ranges) still have no engine
 counterpart anywhere. Bill charge lines for those — and compound lines
