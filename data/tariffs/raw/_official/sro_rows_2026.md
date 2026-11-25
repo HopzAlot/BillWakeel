@@ -57,3 +57,12 @@ Billing months: 2026-09 to 2026-11
 | Bill Line Item | Rate | Applies in | Not applied to |
 |---|---|---|---|
 | Quarterly Tariff Adjustment (QTA) | positive Rs. 0.5194 / kWh | September to November 2026 bills | lifeline consumers, incremental consumption package units and prepaid consumers |
+
+**179 GST rate applied on electricity bills, SRO 179(I)/2023 dated 14 February 2023**
+
+Source: https://ke.com.pk/wp-content/uploads/2025/06/SRO179-2023.pdf
+Supersedes: General Sales Tax (GST)
+
+| Bill Line Item | GST rate on electricity bills | Legal basis |
+|---|---|---|
+| General Sales Tax (GST) | 18% standard rate (raised from 17%) | Sales Tax Act 1990, section 3. The SRO sets the rate for taxable goods generally and does not name electricity |

@@ -262,6 +262,10 @@ def ground_bill(
             continue
 
         best = results[0]
+        # The tariff file's own link (SRO 279) prints the rate rows, not the
+        # taxes. A tax clause without its own source has nothing to link to.
+        if "row_label" in filters and best.chunk.source_url is None:
+            continue
         explanation = _phrase_finding(
             charge.name, charge.amount_pkr, expected_amount, difference, best.chunk.text
         )

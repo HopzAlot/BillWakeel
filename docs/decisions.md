@@ -166,3 +166,11 @@ categories not at 1.5%, as no clause we hold states 1% or 2%. Clauses still take
 have no URL of
 their own and fall back to the tariff file's SRO 279 link, which does not cover GST or Electricity
 Duty.
+
+## 2026-11-25: Tax clauses must carry their own official source (SCRUM-31)
+Follows the entry above and closes its two limits. GST is now cited from SRO 179(I)/2023 (17% to
+18%), and K-Electric's Electricity Duty from its tariff page, which states all five category rates,
+so commercial and agricultural findings are kept again. A tax or adjustment clause with no source
+of its own is dropped rather than shown with the SRO 279 link, which does not contain it. Cost:
+IESCO and LESCO Electricity Duty findings are now dropped, since we hold no official source for
+their duty. The GST row states the standard rate only, not exemptions.

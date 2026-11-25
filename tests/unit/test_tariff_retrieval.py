@@ -97,7 +97,8 @@ def test_retrieve_rejects_unknown_disco():
 
 
 def test_chunks_carry_clause_ids_and_source_file():
-    results = retrieve("What is the GST rate applied on electricity bills?", "k-electric", top_k=1)
+    results = retrieve("What is the Late Payment Surcharge for an overdue electricity bill?",
+                       "k-electric", top_k=1)
     chunk = results[0].chunk
 
     assert chunk.clause_id.startswith("KE-")

@@ -107,7 +107,7 @@ def test_seeded_gst_error_is_caught_with_a_real_citation(ke_a1a_calculation):
     assert finding.clause_id.startswith("KE-")
     assert finding.clause_text  # a real retrieved clause, not empty
     assert finding.explanation  # phrased (here: the deterministic fallback)
-    assert finding.source_url.startswith("https://")
+    assert finding.source_url.endswith("SRO179-2023.pdf")  # not the tariff SRO
     assert finding.confidence in {"high", "medium", "low"}
 
 
@@ -175,3 +175,21 @@ def test_finding_is_dropped_when_no_row_matches_exactly(ke_a1a_calculation, monk
     response = ground_bill("bill-1", extraction, ke_a1a_calculation)
 
     assert response.findings == []
+
+
+def test_tax_clause_without_its_own_source_is_dropped(ke_a1a_calculation, monkeypatch):
+    from services.tariff_retrieval import ChunkResult, TariffChunk
+
+    guide_row = TariffChunk(
+        disco="KE", clause_id="KE-3-6", heading="GST", text="GST is 18%",
+        source_file="data/tariffs/raw/k-electric/tariff_extract_2026.md",
+        row_label="General Sales Tax (GST)",
+    )
+    monkeypatch.setattr(
+        "agents.grounding.retrieve",
+        lambda *args, **kwargs: [ChunkResult(chunk=guide_row, score=0.9)],
+    )
+
+    extraction = _clean_extraction(gst_amount_pkr=EXACT_GST_PKR + 500)
+
+    assert ground_bill("bill-1", extraction, ke_a1a_calculation).findings == []
