@@ -24,7 +24,7 @@
     "calculation_method": "exempt",
     "rate_pkr": 0
   },
-  "minimum_monthly_charge_pkr": null,
+  "minimum_monthly_charge_pkr": 2000,
   "adjustments": [
     {
       "name": "Quarterly Tariff Adjustment (QTA)",

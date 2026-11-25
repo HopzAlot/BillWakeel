@@ -116,3 +116,20 @@ Because this changes GST's basis (GST is 18% of energy + fixed + adjustments) fo
 non-lifeline, non-prepaid K-Electric category, `tests/unit/test_tariff_engine.py`'s two domestic
 bill tests (SCRUM-29, Swati's) needed their expected totals corrected too — the engine logic
 itself didn't change, only the data it now has to work with.
+
+## 2026-11-25: Consumer rates come from SRO 279's uniform schedule, not DISCO determinations (SCRUM-31)
+Checked the structured tariff rates against the primary source (SRO 279(I)/2026: Annex-A-1 for
+XWDISCOs, Annex-C for K-Electric) instead of only the secondary guide. The government-applicable
+variable rates in Annex-A-1 match the K-Electric schedule in Annex-C, so IESCO, LESCO and K-Electric
+sharing one set of files is confirmed. The per-DISCO determinations (S04 IESCO, S05 LESCO) and the
+DISCO annexes set NEPRA-determined tariffs, which differ from what consumers are billed. This
+supersedes the "still a real gap" note in the IESCO/LESCO entry above: S04/S05 should not be
+transcribed into consumer tariff files. Fixed from the same check: A-1(c) prepaid residential
+42.13 -> 42.12, prepaid bulk 35.72 -> 44.87 (it held the industrial rate), and the missing minimum
+monthly charges for A-1 lifeline (Rs. 75) and D-1(a) SCARP (Rs. 2000). Limits: the lifeline value
+is the single-phase one (three-phase is Rs. 150, which the schema cannot express); the Rs. 2000
+agricultural minimum is not applied to D tariffs that carry a per-kW fixed charge, because the
+engine only tops up when there is no fixed charge. Still open: K-Electric Rawat Lab file says
+33.75, which does not match the scanned schedule (appears to be 42.25, not yet confirmed by a
+person); no file exists for prepaid agricultural/SCARP supply; Annex-C also prints non-TOU B-3 (27.00) and
+B-4 (26.43) rows for K-Electric that Annex-A-1 does not and our files do not carry.

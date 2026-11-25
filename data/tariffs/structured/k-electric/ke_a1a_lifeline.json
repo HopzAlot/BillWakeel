@@ -31,7 +31,7 @@
     "calculation_method": "exempt",
     "rate_pkr": 0
   },
-  "minimum_monthly_charge_pkr": null,
+  "minimum_monthly_charge_pkr": 75,
   "adjustments": [],
   "taxes": [
     {

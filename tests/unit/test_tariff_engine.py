@@ -391,6 +391,29 @@ def test_ke_lifeline_is_exempt_from_fixed_charge_and_gst(ke_tariffs):
     assert result.total_pkr == pytest.approx(160.37)
 
 
+@pytest.mark.parametrize("tariff_code,rate", [
+    ("A-1(c)", 42.12),
+    ("Prepaid Bulk", 44.87),
+])
+def test_prepaid_rates_match_sro_279(ke_tariffs, tariff_code, rate):
+    # Annex-A-1 of SRO 279(I)/2026 (data/tariffs/sources/k-electric/)
+    tariff = next(t for t in ke_tariffs if t.tariff_code == tariff_code)
+    assert [slab.rate_per_unit_pkr for slab in tariff.slabs] == [rate]
+
+
+@pytest.mark.parametrize("tariff_code,status,disco,minimum", [
+    ("A-1(a)", "lifeline", "K-Electric", 75),
+    ("D-1(a)", None, "IESCO", 2000),
+])
+def test_minimum_monthly_charge_applies_with_zero_units(
+    ke_tariffs, tariff_code, status, disco, minimum
+):
+    data = ke_input(disco=disco, tariff_code=tariff_code,
+                    consumer_status=status, monthly_units=0)
+    result = calculate_bill(select_tariff(ke_tariffs, data), data)
+    assert result.subtotal_pkr == pytest.approx(minimum)
+
+
 def test_select_tariff_needs_consumer_status_for_domestic(ke_tariffs):
     with pytest.raises(TariffEngineError, match="no tariff found"):
         select_tariff(ke_tariffs, ke_input(consumer_status=None))
