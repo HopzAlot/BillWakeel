@@ -27,6 +27,7 @@ from typing import Literal
 from config import settings
 from models.bill import BillExtraction
 from models.finding import Finding, FindingsResponse
+from services.charge_names import CHARGE_NAME_ALIASES, normalize_charge_name
 from services.gemini import GeminiError, extract_text, get_llm, invoke_with_retry
 from services.tariff_engine import BillCalculation
 from services.tariff_retrieval import retrieve
@@ -48,31 +49,8 @@ TOLERANCE_PKR = 1.0
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _PROMPT_PATH = _REPO_ROOT / "prompts" / "grounding" / f"{PROMPT_VERSION}.md"
 
-# Normalized bill charge-line wording -> canonical component key.
-# "Canonical key" is either "energy"/"fixed" (the engine's own fields) or
-# the slug of a tax/adjustment's name in the tariff JSON (e.g. "gst").
-_CHARGE_NAME_ALIASES: dict[str, str] = {
-    "cost of electricity": "energy",
-    "energy charges": "energy",
-    "energy charge": "energy",
-    "units charges": "energy",
-    "electricity charges": "energy",
-    "fixed charges": "fixed",
-    "fixed charge": "fixed",
-    "meter rent": "fixed",
-    "service rent": "fixed",
-    "electricity duty": "electricity_duty",
-    "e d": "electricity_duty",
-    "gst": "gst",
-    "general sales tax": "gst",
-    "sales tax": "gst",
-    "quarterly tariff adjustment": "qta",
-    "qtr tariff adjustment": "qta",
-    "qta": "qta",
-}
-
 # A tax/adjustment's own name in the tariff JSON resolves to its canonical
-# key by keyword, not by exact phrase — unlike _CHARGE_NAME_ALIASES above,
+# key by keyword, not by exact phrase — unlike CHARGE_NAME_ALIASES above,
 # which must stay exact (a bill's "GST" and "GST on FPA" are different
 # charges and must never collide into the same key). This only matters
 # for the one name on the JSON side, so a looser match is safe and keeps
@@ -84,7 +62,7 @@ _ADJUSTMENT_KEY_KEYWORDS: list[tuple[str, str]] = [
 
 
 def _canonical_component_key(name: str) -> str:
-    normalized = _normalize_charge_name(name)
+    normalized = normalize_charge_name(name)
     for keyword, key in _ADJUSTMENT_KEY_KEYWORDS:
         if keyword in normalized:
             return key
@@ -97,10 +75,6 @@ def _load_prompt() -> str:
 
 def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
-
-
-def _normalize_charge_name(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", name.strip().lower()).strip()
 
 
 def _money(amount: float) -> float:
@@ -128,7 +102,7 @@ def _match_component(
     surcharges, "GST on FPA" style compound lines) rather than guessing —
     there's no deterministic expected amount to compare against.
     """
-    canonical = _CHARGE_NAME_ALIASES.get(_normalize_charge_name(charge_name))
+    canonical = CHARGE_NAME_ALIASES.get(normalize_charge_name(charge_name))
     if canonical is None:
         canonical = _slug(charge_name)
     return components.get(canonical)
@@ -224,7 +198,10 @@ def _phrase_finding(
 
 
 def ground_bill(
-    bill_id: str, extraction: BillExtraction, calculation: BillCalculation
+    bill_id: str,
+    extraction: BillExtraction,
+    calculation: BillCalculation,
+    unverifiable: frozenset[str] = frozenset(),
 ) -> FindingsResponse:
     """Compare a bill's printed charges to the engine's expected amounts.
 
@@ -233,6 +210,10 @@ def ground_bill(
     MIN_CITATION_SIMILARITY similarity; anything else is dropped before
     the LLM phrasing step runs, per Part A rule 2 ("every finding must
     cite a real clause").
+
+    `unverifiable` names components (canonical keys) whose expected amount
+    rests on something unknown, such as the consumer's status. They are
+    never flagged. The calculation's warnings are passed to the user.
     """
     components = _expected_components(calculation)
     findings: list[Finding] = []
@@ -243,6 +224,9 @@ def ground_bill(
             continue
 
         display_name, expected_amount = match
+        printed = normalize_charge_name(charge.name)
+        if CHARGE_NAME_ALIASES.get(printed, _slug(charge.name)) in unverifiable:
+            continue
         difference = _money(charge.amount_pkr - expected_amount)
         if abs(difference) <= TOLERANCE_PKR:
             continue
@@ -288,5 +272,6 @@ def ground_bill(
         bill_id=bill_id,
         findings=findings,
         recalculated_total_pkr=calculation.total_pkr,
+        warnings=calculation.warnings,
         model=settings.gemini_model,
     )

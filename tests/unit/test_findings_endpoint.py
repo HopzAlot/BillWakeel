@@ -133,3 +133,17 @@ def test_findings_for_clean_bill_is_empty():
     response = client.get(f"/bills/{bill_id}/findings")
     assert response.status_code == 200
     assert response.json()["findings"] == []
+
+
+def test_findings_does_not_flag_status_dependent_charges_when_status_is_unknown():
+    body = {**_KE_A1A_BASE, "charges": [
+        {"name": "Cost of electricity", "amount_pkr": 2500.0},  # no status gives this
+        {"name": "GST", "amount_pkr": 900.0},
+    ]}
+    bill_id = _upload_and_set_extraction(body)
+
+    data = client.get(f"/bills/{bill_id}/findings").json()
+
+    assert data["findings"] == []
+    assert any("could not tell" in w for w in data["warnings"])
+

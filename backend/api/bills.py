@@ -25,6 +25,7 @@ from services.bill_to_tariff import (
     build_calculation_input,
     normalize_disco,
     normalize_tariff_code,
+    resolve_consumer_status,
 )
 from services.gemini import GeminiError
 from services.tariff_engine import (
@@ -267,13 +268,16 @@ async def get_findings(bill_id: str):
         tariff_code = normalize_tariff_code(extraction.tariff_category)
         calc_input, pre_warnings = build_calculation_input(extraction, disco, tariff_code)
         schedules = _load_all_tariff_schedules()
+        calc_input, status_warnings, unverifiable = resolve_consumer_status(
+            extraction, calc_input, schedules
+        )
         tariff = select_tariff(schedules, calc_input)
         calculation = calculate_bill(tariff, calc_input)
-        calculation.warnings = pre_warnings + calculation.warnings
+        calculation.warnings = pre_warnings + status_warnings + calculation.warnings
     except TariffEngineError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Could not match this bill to a tariff on file: {exc}",
         )
 
-    return ground_bill(bill_id, extraction, calculation)
+    return ground_bill(bill_id, extraction, calculation, unverifiable)

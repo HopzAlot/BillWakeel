@@ -31,3 +31,5 @@ class FindingsResponse(BaseModel):
     findings: list[Finding]
     recalculated_total_pkr: float
     model: str
+    # What the recalculation had to assume or could not check, in plain words.
+    warnings: list[str] = []
