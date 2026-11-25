@@ -21,7 +21,7 @@ class Settings:
     def __init__(self) -> None:
         self.google_api_key: str = os.getenv("GOOGLE_API_KEY", "")
         self.gemini_model: str = os.getenv(
-            "GEMINI_MODEL", "gemini-3.8-flash"
+            "GEMINI_MODEL", "gemini-3.5-flash-lite"
         )
         self.frontend_origin: str = os.getenv(
             "FRONTEND_ORIGIN", "http://localhost:5173"
