@@ -23,3 +23,6 @@ Prompt v1 already reads every gas-specific field correctly (4/4 schema-valid, se
 docs/eval/2026-11-16-extraction-gas.md), so no v2 was written. Rejected: adding a new
 electricity DISCO layout (no samples yet), and a v2 prompt only to fix provider names
 (not a gas-layout problem and it would also change electricity results).
+
+## 2026-11-21: Findings UI built against the proposed Finding contract (SCRUM-34)
+FindingsView renders the Finding/FindingsResponse fields from brief section 8.4 unchanged (charge_name, billed/expected/difference, clause_id, clause_text, source_url, confidence). If Rehan changes a field name in backend/models/finding.py, only frontend/src/components/FindingsView.jsx and services/mockFindings.js need updating. VITE_MOCK_FINDINGS (populated|empty) lets the UI be demoed before /findings is live; it is unset by default so the real endpoint is used.
