@@ -1,9 +1,11 @@
 import { useState } from "react";
 import ExtractionForm from "../components/ExtractionForm";
+import FindingsView from "../components/FindingsView";
 import {
   uploadBill,
   extractBill,
   saveExtraction,
+  getFindings,
 } from "../services/billApi";
 
 function UploadPage() {
@@ -12,6 +14,9 @@ function UploadPage() {
   const [extraction, setExtraction] = useState(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [findings, setFindings] = useState(null);
+  const [isLoadingFindings, setIsLoadingFindings] = useState(false);
+  const [findingsError, setFindingsError] = useState("");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
 
@@ -22,6 +27,8 @@ function UploadPage() {
     setStatus("");
     setExtraction(null);
     setBillId(null);
+    setFindings(null);
+    setFindingsError("");
     setIsAnalysing(true);
 
     try {
@@ -50,6 +57,22 @@ function UploadPage() {
     }
   }
 
+  async function loadFindings(id) {
+    setFindingsError("");
+    setFindings(null);
+    setIsLoadingFindings(true);
+
+    try {
+      setFindings(await getFindings(id));
+    } catch (err) {
+      setFindingsError(
+        err.message || "Unable to check this bill against the tariff.",
+      );
+    } finally {
+      setIsLoadingFindings(false);
+    }
+  }
+
   async function handleSave() {
     if (!billId || !extraction) return;
 
@@ -62,6 +85,7 @@ function UploadPage() {
 
       setExtraction(savedExtraction);
       setStatus("Your corrected bill details have been saved.");
+      await loadFindings(billId);
     } catch (err) {
       setError(err.message || "Unable to save your corrections.");
     } finally {
@@ -73,6 +97,8 @@ function UploadPage() {
     setFile(event.target.files?.[0] || null);
     setBillId(null);
     setExtraction(null);
+    setFindings(null);
+    setFindingsError("");
     setError("");
     setStatus("");
   }
@@ -110,6 +136,12 @@ function UploadPage() {
           isSaving={isSaving}
         />
       )}
+
+      {isLoadingFindings && (
+        <p role="status">Checking your bill against the published tariff...</p>
+      )}
+      {findingsError && <p role="alert">{findingsError}</p>}
+      {findings && <FindingsView findings={findings} />}
     </main>
   );
 }
