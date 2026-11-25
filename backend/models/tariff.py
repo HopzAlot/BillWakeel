@@ -104,6 +104,9 @@ class TariffTax(BaseModel):
     type: Literal["percentage", "fixed"]
     rate: float = Field(ge=0)
     basis: str
+    # None means every DISCO on the schedule. Set where provincial rates
+    # differ, e.g. Electricity Duty in Sindh (K-Electric) and Punjab.
+    discos: list[DISCO] | None = None
 
 
 class TariffSource(BaseModel):

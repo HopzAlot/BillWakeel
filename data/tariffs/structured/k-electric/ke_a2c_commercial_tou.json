@@ -69,7 +69,20 @@
       "name": "Electricity Duty",
       "type": "percentage",
       "rate": 2.0,
-      "basis": "Base energy charges only"
+      "basis": "Base energy charges only",
+      "discos": [
+        "K-Electric"
+      ]
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.5,
+      "basis": "Base energy charges only",
+      "discos": [
+        "IESCO",
+        "LESCO"
+      ]
     }
   ],
   "source": {

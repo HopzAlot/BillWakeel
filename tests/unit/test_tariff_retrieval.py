@@ -195,10 +195,15 @@ def test_tax_citations_come_from_their_own_row(code, status, name, row_label):
     assert [r.chunk.row_label for r in results][:1] == ([row_label] if row_label else [])
 
 
-def test_k_electric_duty_row_is_not_used_for_other_discos():
-    # 2% and 1% come from K-Electric's own page, so IESCO has nothing to cite
+def test_each_disco_cites_its_own_duty_clause():
+    # 2% is K-Electric's commercial rate; no Punjab clause states it
     assert not retrieve("What is the Electricity Duty?", "iesco",
                         row_label="Electricity Duty (ED)", contains="2%")
     best = retrieve("What is the Electricity Duty?", "k-electric",
                     row_label="Electricity Duty (ED)", contains="2%")[0]
     assert best.chunk.source_url == "https://ke.com.pk/customer-services/tariff-structure"
+
+    for disco in ("iesco", "lesco"):
+        punjab = retrieve("What is the Electricity Duty?", disco,
+                          row_label="Electricity Duty (ED)", contains="1.5%")[0]
+        assert punjab.chunk.source_url.endswith("222853.pdf")

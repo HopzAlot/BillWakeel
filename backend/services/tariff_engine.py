@@ -351,6 +351,8 @@ def calculate_bill(
     bases = {"energy_charge": energy, "fixed_charge": fixed, "subtotal": subtotal}
     taxes = []
     for tax in tariff.taxes:
+        if tax.discos is not None and data.disco not in tax.discos:
+            continue
         if tax.type == "fixed":
             amount = tax.rate
         elif tax.basis in TAX_BASES:

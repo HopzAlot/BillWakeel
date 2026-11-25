@@ -183,3 +183,14 @@ returned 404. Search-result excerpts of the Punjab Finance Act 1964 give 1.5% do
 commercial, 1.0% industrial and agricultural, which, if current, means the shared files' 2%
 commercial and 1.5% industrial (K-Electric's rates) are wrong for IESCO and LESCO. Not changed:
 excerpts are not a source, and the files cannot yet hold per-DISCO taxes.
+
+## 2026-11-25: Electricity Duty differs by province; IESCO and LESCO use the Punjab rates (SCRUM-31)
+Supersedes the "left uncited" part of the previous entry. The Punjab Gazette copy of the Finance
+Act 2007 gives domestic and commercial 1.5%, industrial undertakings and agricultural tube wells
+1%. The shared tariff files applied K-Electric's 2% commercial and 1.5% industrial to IESCO and
+LESCO, overstating the expected duty. `TariffTax` gained an optional `discos` list, and the A-2 and
+B files now carry one duty line per province; both Punjab DISCOs cite the Act. Rejected: separate
+tariff files per DISCO, which would duplicate every rate. Limits: IESCO also serves Islamabad,
+which the Punjab Act does not itself cover and we have not checked; the C (single-point) files keep
+2% for all, since the schedule has no such category, so IESCO/LESCO duty findings there are
+dropped; only Finance Acts were searched, not other government notifications.

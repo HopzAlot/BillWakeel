@@ -440,6 +440,22 @@ def test_agricultural_minimum_is_a_floor_on_energy_plus_fixed(ke_tariffs, units,
     assert result.subtotal_pkr == pytest.approx(subtotal)
 
 
+@pytest.mark.parametrize("code, disco, percent", [
+    ("A-2(a)", "K-Electric", 2.0),
+    ("A-2(a)", "IESCO", 1.5),
+    ("A-2(a)", "LESCO", 1.5),
+    ("B-1(a)", "K-Electric", 1.5),
+    ("B-1(a)", "LESCO", 1.0),
+    ("D-2(a)", "IESCO", 1.0),
+])
+def test_electricity_duty_follows_the_province(ke_tariffs, code, disco, percent):
+    data = ke_input(disco=disco, tariff_code=code, consumer_status=None, monthly_units=100)
+    result = calculate_bill(select_tariff(ke_tariffs, data), data)
+
+    duty = [t.amount_pkr for t in result.taxes if t.name == "Electricity Duty"]
+    assert duty == [pytest.approx(result.energy_charge_pkr * percent / 100, abs=0.01)]
+
+
 def test_select_tariff_needs_consumer_status_for_domestic(ke_tariffs):
     with pytest.raises(TariffEngineError, match="no tariff found"):
         select_tariff(ke_tariffs, ke_input(consumer_status=None))
