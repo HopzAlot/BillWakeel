@@ -1,0 +1,159 @@
+{
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "A-1(a)",
+  "tariff_category": "Domestic",
+  "consumer_status": "unprotected",
+  "billing_method": "landing_slab",
+  "metering_type": "regular",
+  "min_sanctioned_load_kw": 0,
+  "max_sanctioned_load_kw": 5,
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": 100,
+      "rate_per_unit_pkr": 22.44,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 275
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 100,
+      "max_units": 200,
+      "rate_per_unit_pkr": 28.91,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 300
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 200,
+      "max_units": 300,
+      "rate_per_unit_pkr": 33.1,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 350
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 300,
+      "max_units": 400,
+      "rate_per_unit_pkr": 36.46,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 400
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 400,
+      "max_units": 500,
+      "rate_per_unit_pkr": 38.95,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 500
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 500,
+      "max_units": 600,
+      "rate_per_unit_pkr": 40.22,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 675
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 600,
+      "max_units": 700,
+      "rate_per_unit_pkr": 41.85,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 675
+      },
+      "time_period": "all"
+    },
+    {
+      "min_units": 700,
+      "max_units": null,
+      "rate_per_unit_pkr": 47.2,
+      "fixed_charge": {
+        "calculation_method": "per_kw_sanctioned_load",
+        "rate_pkr": 675
+      },
+      "time_period": "all"
+    }
+  ],
+  "fixed_charge": null,
+  "minimum_monthly_charge_pkr": null,
+  "adjustments": [
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3298,
+      "effective_from_month": "2025-12",
+      "effective_to_month": "2026-02"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3504,
+      "effective_from_month": "2026-03",
+      "effective_to_month": "2026-05"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": -1.9857,
+      "effective_from_month": "2026-06",
+      "effective_to_month": "2026-08"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.5194,
+      "effective_from_month": "2026-09",
+      "effective_to_month": "2026-11"
+    }
+  ],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.5,
+      "basis": "Base energy charges only",
+      "discos": [
+        "K-Electric"
+      ]
+    },
+    {
+      "name": "Electricity Duty",
+      "type": "percentage",
+      "rate": 1.5,
+      "basis": "Energy charges + quarterly adjustment",
+      "discos": [
+        "IESCO",
+        "LESCO"
+      ]
+    }
+  ],
+  "source": {
+    "url": "https://ke.com.pk/wp-content/uploads/2026/02/SRO-279I-dated-Feb-12-2026-2.pdf",
+    "retrieved_on": "2026-11-25",
+    "document_name": "SRO 279(I)/2026 dated 12 Feb 2026, Annex-A-1 (XWDISCOs) and Annex-C (K-Electric): rates and fixed charges checked 2026-11-25. Taxes and quarterly adjustments come from other sources, see data/tariffs/raw/sources.md",
+    "clause": "A-1(a) Domestic Unprotected; Calendar Year 2026"
+  }
+}

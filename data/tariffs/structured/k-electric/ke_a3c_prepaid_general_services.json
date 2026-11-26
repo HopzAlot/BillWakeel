@@ -1,0 +1,44 @@
+{
+  "discos": [
+    "K-Electric",
+    "IESCO",
+    "LESCO"
+  ],
+  "tariff_code": "A-3(c)",
+  "tariff_category": "General Services",
+  "consumer_status": null,
+  "billing_method": "flat",
+  "metering_type": "prepaid",
+  "min_sanctioned_load_kw": null,
+  "max_sanctioned_load_kw": null,
+  "effective_from": "2026-01-01",
+  "effective_to": null,
+  "slabs": [
+    {
+      "min_units": 0,
+      "max_units": null,
+      "rate_per_unit_pkr": 42.48,
+      "time_period": "all"
+    }
+  ],
+  "fixed_charge": {
+    "calculation_method": "per_consumer",
+    "rate_pkr": 1000
+  },
+  "minimum_monthly_charge_pkr": null,
+  "adjustments": [],
+  "taxes": [
+    {
+      "name": "GST",
+      "type": "percentage",
+      "rate": 18,
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
+    }
+  ],
+  "source": {
+    "url": "https://ke.com.pk/wp-content/uploads/2026/02/SRO-279I-dated-Feb-12-2026-2.pdf",
+    "retrieved_on": "2026-11-25",
+    "document_name": "SRO 279(I)/2026 dated 12 Feb 2026, Annex-A-1 (XWDISCOs) and Annex-C (K-Electric): rates and fixed charges checked 2026-11-25. Taxes and quarterly adjustments come from other sources, see data/tariffs/raw/sources.md",
+    "clause": "A-3(c) Prepaid General Services; Calendar Year 2026"
+  }
+}
