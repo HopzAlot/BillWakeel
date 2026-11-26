@@ -61,7 +61,9 @@ export async function saveExtraction(billId, extraction) {
 }
 
 // 4. Get the tariff findings (discrepancies with cited clauses) for a bill.
-// Returns a FindingsResponse: { bill_id, findings[], recalculated_total_pkr, model }.
+// Returns a FindingsResponse:
+// { bill_id, findings[], recalculated_total_pkr, model, warnings[] }.
+// Each finding includes an `explanation` string. See backend/models/finding.py.
 export async function getFindings(billId) {
   if (USE_MOCK_FINDINGS) {
     return getMockFindings(billId);
