@@ -61,6 +61,10 @@ function FindingCard({ finding }) {
         </div>
       </dl>
 
+      {finding.explanation && (
+        <p className="finding-explanation">{finding.explanation}</p>
+      )}
+
       <figure className="finding-clause">
         <figcaption>
           Published tariff clause: <strong>{finding.clause_id}</strong>
@@ -78,24 +82,50 @@ function FindingCard({ finding }) {
   );
 }
 
-function FindingsView({ findings }) {
+function FindingsView({ findings, isDemo = false }) {
   if (!findings) return null;
 
   const list = findings.findings ?? [];
+  const warnings = Array.isArray(findings.warnings) ? findings.warnings : [];
+  const hasWarnings = warnings.length > 0;
+  const hasTotal =
+    findings.recalculated_total_pkr !== undefined &&
+    findings.recalculated_total_pkr !== null;
 
   return (
     <section className="findings-view" aria-label="Tariff findings">
       <h2>Tariff check</h2>
 
+      {isDemo && (
+        <p className="findings-demo" role="note">
+          <strong>Demo data.</strong> These results are made-up examples, not
+          a check of your bill.
+        </p>
+      )}
+
       {list.length === 0 ? (
         <div className="findings-empty" role="status">
-          <p>
-            <strong>No discrepancies found.</strong>
-          </p>
-          <p>
-            We recalculated this bill from the published tariff and did not
-            find any charge that differs from it.
-          </p>
+          {hasWarnings ? (
+            <>
+              <p>
+                <strong>No discrepancies in the charges we could check.</strong>
+              </p>
+              <p>
+                Some charges were not checked or rely on assumptions. See
+                below.
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                <strong>No discrepancies found.</strong>
+              </p>
+              <p>
+                We recalculated this bill from the published tariff and did
+                not find any charge that differs from it.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -116,13 +146,25 @@ function FindingsView({ findings }) {
         </>
       )}
 
-      {findings.recalculated_total_pkr !== undefined &&
-        findings.recalculated_total_pkr !== null && (
-          <p className="findings-total">
-            Recalculated total from tariff:{" "}
-            <strong>{formatPkr(findings.recalculated_total_pkr)}</strong>
-          </p>
-        )}
+      {hasWarnings && (
+        <div className="findings-warnings">
+          <h3>Not checked or assumed</h3>
+          <ul>
+            {warnings.map((warning, index) => (
+              <li key={index}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {hasTotal && (
+        <p className="findings-total">
+          {hasWarnings
+            ? "Estimate based on the assumptions above, not a check of your bill total:"
+            : "Recalculated total from tariff:"}{" "}
+          <strong>{formatPkr(findings.recalculated_total_pkr)}</strong>
+        </p>
+      )}
 
       <p className="findings-note">
         These results compare your bill with the published tariff. They are

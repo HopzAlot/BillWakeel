@@ -597,3 +597,38 @@ a {
   color: var(--muted);
   font-size: var(--text-sm);
 }
+
+.finding-explanation {
+  margin: 0 0 var(--space-2);
+  color: var(--ivory);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.findings-demo {
+  margin: 0;
+  padding: 6px var(--space-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.findings-warnings {
+  padding: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.findings-warnings h3 {
+  margin: 0 0 6px;
+}
+
+.findings-warnings ul {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
