@@ -23,6 +23,9 @@ docs/eval/2026-11-16-extraction-gas.md), so no v2 was written. Rejected: adding 
 electricity DISCO layout (no samples yet), and a v2 prompt only to fix provider names
 (not a gas-layout problem and it would also change electricity results).
 
+## 2026-11-21: Findings UI built against the proposed Finding contract (SCRUM-34)
+FindingsView renders the Finding/FindingsResponse fields from brief section 8.4 unchanged (charge_name, billed/expected/difference, clause_id, clause_text, source_url, confidence). If Rehan changes a field name in backend/models/finding.py, only frontend/src/components/FindingsView.jsx and services/mockFindings.js need updating. VITE_MOCK_FINDINGS (populated|empty) lets the UI be demoed before /findings is live; it is unset by default so the real endpoint is used.
+
 ## 2026-11-22: Recalculation engine follows the extended tariff schema; provisional Rs. 1 tolerance (SCRUM-29)
 backend/services/tariff_engine.py recalculates a bill from a TariffSchedule and a
 TariffCalculationInput (SCRUM-28) in plain Python: energy through the slabs using the
@@ -222,3 +225,15 @@ unprotected from one bill belongs to SCRUM-51, so it was removed. We did not go 
 100 units or less) are now not checked, with a warning. Cost: household bills get little checking
 until SCRUM-51. Extraction prompt v2 was also reverted (it was never pushed); v1 stays, with its
 known late-payment total bug, for the sprint it was deferred to.
+
+## 2026-11-26: Findings UI follows the live /findings contract, including warnings and explanation (SCRUM-34)
+Supersedes the 2026-11-21 entry "Findings UI built against the proposed Finding contract (SCRUM-34)", which said the
+contract was used unchanged and that /findings was not live. GET /bills/{bill_id}/findings is now in dev, and SCRUM-31
+added two fields to backend/models/finding.py: Finding.explanation and FindingsResponse.warnings. FindingsView now shows
+every warning as received under "Not checked or assumed", whether or not there are findings. When warnings exist, an
+empty result reads "No discrepancies in the charges we could check", and recalculated_total_pkr is labelled as an
+estimate based on those assumptions, not a check of the bill total, because the old wording suggested the whole bill
+had been checked (data/samples/iesco_001 returns no findings, two warnings and a recalculated total of 3644.35 against
+a billed Rs 7,626). Findings are cleared when the user edits the extraction, so they never sit beside changed values.
+VITE_MOCK_FINDINGS now turns mocking on only for "populated" or "empty", and the screen shows a "Demo data" label.
+Rejected: hiding the recalculated total (kept, with a label), and changing the backend or the API contract.

@@ -1,5 +1,6 @@
 
-import { API_BASE_URL } from "../config";
+import { API_BASE_URL, USE_MOCK_FINDINGS } from "../config";
+import { getMockFindings } from "./mockFindings";
 
 async function handleResponse(response) {
   const contentType = response.headers.get("content-type");
@@ -54,6 +55,22 @@ export async function saveExtraction(billId, extraction) {
       },
       body: JSON.stringify(extraction),
     },
+  );
+
+  return handleResponse(response);
+}
+
+// 4. Get the tariff findings (discrepancies with cited clauses) for a bill.
+// Returns a FindingsResponse:
+// { bill_id, findings[], recalculated_total_pkr, model, warnings[] }.
+// Each finding includes an `explanation` string. See backend/models/finding.py.
+export async function getFindings(billId) {
+  if (USE_MOCK_FINDINGS) {
+    return getMockFindings(billId);
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/bills/${encodeURIComponent(billId)}/findings`,
   );
 
   return handleResponse(response);

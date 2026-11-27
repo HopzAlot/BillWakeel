@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ExtractionForm from "../components/ExtractionForm";
+import FindingsView from "../components/FindingsView";
 import {
   uploadBill,
   extractBill,
   saveExtraction,
+  getFindings,
 } from "../services/billApi";
+import { USE_MOCK_FINDINGS } from "../config";
 
 function UploadPage() {
   const [file, setFile] = useState(null);
@@ -12,8 +15,26 @@ function UploadPage() {
   const [extraction, setExtraction] = useState(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [findings, setFindings] = useState(null);
+  const [isLoadingFindings, setIsLoadingFindings] = useState(false);
+  const [findingsError, setFindingsError] = useState("");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  // Bumped whenever findings become stale, so a slow response for old values
+  // is ignored instead of appearing next to edited fields.
+  const findingsRequest = useRef(0);
+
+  function discardFindings() {
+    findingsRequest.current += 1;
+    setFindings(null);
+    setFindingsError("");
+    setIsLoadingFindings(false);
+  }
+
+  function handleExtractionChange(updated) {
+    setExtraction(updated);
+    discardFindings();
+  }
 
   async function handleAnalyse() {
     if (!file) return;
@@ -22,6 +43,7 @@ function UploadPage() {
     setStatus("");
     setExtraction(null);
     setBillId(null);
+    discardFindings();
     setIsAnalysing(true);
 
     try {
@@ -50,6 +72,25 @@ function UploadPage() {
     }
   }
 
+  async function loadFindings(id) {
+    discardFindings();
+    const requestId = findingsRequest.current;
+    setIsLoadingFindings(true);
+
+    try {
+      const result = await getFindings(id);
+      if (requestId === findingsRequest.current) setFindings(result);
+    } catch (err) {
+      if (requestId === findingsRequest.current) {
+        setFindingsError(
+          err.message || "Unable to check this bill against the tariff.",
+        );
+      }
+    } finally {
+      if (requestId === findingsRequest.current) setIsLoadingFindings(false);
+    }
+  }
+
   async function handleSave() {
     if (!billId || !extraction) return;
 
@@ -62,6 +103,7 @@ function UploadPage() {
 
       setExtraction(savedExtraction);
       setStatus("Your corrected bill details have been saved.");
+      await loadFindings(billId);
     } catch (err) {
       setError(err.message || "Unable to save your corrections.");
     } finally {
@@ -73,6 +115,7 @@ function UploadPage() {
     setFile(event.target.files?.[0] || null);
     setBillId(null);
     setExtraction(null);
+    discardFindings();
     setError("");
     setStatus("");
   }
@@ -105,11 +148,17 @@ function UploadPage() {
       {extraction && (
         <ExtractionForm
           extraction={extraction}
-          onChange={setExtraction}
+          onChange={handleExtractionChange}
           onSave={handleSave}
           isSaving={isSaving}
         />
       )}
+
+      {isLoadingFindings && (
+        <p role="status">Checking your bill against the published tariff...</p>
+      )}
+      {findingsError && <p role="alert">{findingsError}</p>}
+      {findings && <FindingsView findings={findings} isDemo={USE_MOCK_FINDINGS} />}
     </main>
   );
 }
