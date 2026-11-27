@@ -1,0 +1,5 @@
+Source: https://ke.com.pk/customer-services/tariff-structure
+Retrieved: 2026-11-25
+Extract of the tax section only, as page text:
+
+Electricity Duty * Domestic = 1.5% /Commercial = 2% /Industrial = 1.5% /Bulk Supply=2% & Agricultural = 1% of Variable Charges General Sales Tax Consumers are subject to General Sales Tax at the rates specified under the Sale Tax Act, 1990

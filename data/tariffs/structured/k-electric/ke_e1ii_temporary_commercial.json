@@ -26,19 +26,44 @@
     "rate_pkr": 5000
   },
   "minimum_monthly_charge_pkr": null,
-  "adjustments": [],
+  "adjustments": [
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3298,
+      "effective_from_month": "2025-12",
+      "effective_to_month": "2026-02"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.3504,
+      "effective_from_month": "2026-03",
+      "effective_to_month": "2026-05"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": -1.9857,
+      "effective_from_month": "2026-06",
+      "effective_to_month": "2026-08"
+    },
+    {
+      "name": "Quarterly Tariff Adjustment (QTA)",
+      "rate_pkr_per_unit": 0.5194,
+      "effective_from_month": "2026-09",
+      "effective_to_month": "2026-11"
+    }
+  ],
   "taxes": [
     {
       "name": "GST",
       "type": "percentage",
       "rate": 18,
-      "basis": "Energy charges + fixed charges + applicable electricity adjustments"
+      "basis": "Energy, fixed charges, adjustments, surcharges and Electricity Duty"
     }
   ],
   "source": {
-    "url": "https://www.nepra.org.pk/tariff/Tariff/Ex-WAPDA%20DISCOS/2026/TRF-100%20XWDISCOS%20AND%20KE%20RATIONALIZATION%20OF%20TARIFF%2011-02-2026%202935-57.pdf",
-    "retrieved_on": "2026-11-21",
-    "document_name": "NEPRA Decision: Rationalization of Tariff (XWDISCOs and K-Electric), dated 2026-02-11",
+    "url": "https://ke.com.pk/wp-content/uploads/2026/02/SRO-279I-dated-Feb-12-2026-2.pdf",
+    "retrieved_on": "2026-11-25",
+    "document_name": "SRO 279(I)/2026 dated 12 Feb 2026, Annex-A-1 (XWDISCOs) and Annex-C (K-Electric): rates and fixed charges checked 2026-11-25. Taxes and quarterly adjustments come from other sources, see data/tariffs/raw/sources.md",
     "clause": "Annex-C ? E-1(ii) Temporary Commercial Supply"
   }
 }

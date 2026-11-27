@@ -336,15 +336,18 @@ def test_engine_runs_on_every_ke_tariff_except_derived_ones(ke_tariffs):
 
 
 def test_ke_protected_domestic_bill(ke_tariffs):
+    # No billing_month here, so the K-Electric schedule's time-bounded QTA
+    # (SCRUM-31, 2026-11-25) is correctly skipped - see
+    # test_ke_qta_applies_only_within_its_effective_window below for that.
     tariff = select_tariff(ke_tariffs, ke_input())
     result = calculate_bill(tariff, ke_input())
 
     # telescopic: 100 x 10.54 + 50 x 13.01 = 1054 + 650.50 = 1704.50
     # fixed: lands in 101-200 slab, Rs 300/kW x 3 kW = 900
-    # GST 18% of 2604.50 = 468.81, ED 1.5% of 1704.50 = 25.57
+    # ED 1.5% of 1704.50 = 25.57, GST 18% of (2604.50 + 25.57) = 473.41
     assert result.energy_charge_pkr == pytest.approx(1704.50)
     assert result.fixed_charge_pkr == pytest.approx(900)
-    assert result.total_pkr == pytest.approx(3098.88)
+    assert result.total_pkr == pytest.approx(3103.48)
 
 
 def test_ke_unprotected_domestic_bill(ke_tariffs):
@@ -352,9 +355,31 @@ def test_ke_unprotected_domestic_bill(ke_tariffs):
     result = calculate_bill(select_tariff(ke_tariffs, data), data)
 
     # landing slab: all 200 units x 28.91 = 5782; fixed Rs 300/kW x 3 kW = 900
-    # GST 18% of 6682 = 1202.76, ED 1.5% of 5782 = 86.73
+    # ED 1.5% of 5782 = 86.73, GST 18% of (6682 + 86.73) = 1218.37
     assert result.energy_charge_pkr == pytest.approx(5782)
-    assert result.total_pkr == pytest.approx(7971.49)
+    assert result.total_pkr == pytest.approx(7987.10)
+
+
+def test_ke_qta_applies_only_within_its_effective_window(ke_tariffs):
+    """SCRUM-31 (2026-11-25): the Quarterly Tariff Adjustment is time-bounded
+    (effective_from_month/effective_to_month). It must apply inside its
+    window, and be skipped - with a warning, not silently - outside it or
+    when the bill carries no billing_month at all."""
+    tariff = select_tariff(ke_tariffs, ke_input())
+
+    in_window = calculate_bill(tariff, ke_input(billing_month="2026-07"))
+    assert in_window.adjustments and in_window.adjustments[0].amount_pkr == pytest.approx(
+        150 * -1.9857, abs=0.01
+    )
+    assert not any("not applied" in w for w in in_window.warnings)
+
+    outside = calculate_bill(tariff, ke_input(billing_month="2026-12"))
+    assert outside.adjustments == []
+    assert any("not applied" in w and "2026-12" in w for w in outside.warnings)
+
+    no_billing_month = calculate_bill(tariff, ke_input())
+    assert no_billing_month.adjustments == []
+    assert any("not applied" in w and "no billing_month" in w for w in no_billing_month.warnings)
 
 
 def test_ke_lifeline_is_exempt_from_fixed_charge_and_gst(ke_tariffs):
@@ -364,6 +389,71 @@ def test_ke_lifeline_is_exempt_from_fixed_charge_and_gst(ke_tariffs):
     # 40 x 3.95 = 158, no fixed charge, no GST, ED 1.5% = 2.37
     assert result.fixed_charge_pkr == 0
     assert result.total_pkr == pytest.approx(160.37)
+
+
+@pytest.mark.parametrize("tariff_code,rate", [
+    ("A-1(c)", 42.12),
+    ("Prepaid Bulk", 44.87),
+    ("K", 42.25),
+    ("Prepaid Agricultural", 33.15),
+])
+def test_corrected_rates_match_sro_279(ke_tariffs, tariff_code, rate):
+    # Annex-A-1 of SRO 279(I)/2026 (data/tariffs/sources/k-electric/)
+    tariff = next(t for t in ke_tariffs if t.tariff_code == tariff_code)
+    assert [slab.rate_per_unit_pkr for slab in tariff.slabs] == [rate]
+
+
+@pytest.mark.parametrize("tariff_code,status,disco,minimum", [
+    ("A-1(a)", "lifeline", "K-Electric", 75),
+    ("D-1(a)", None, "IESCO", 2000),
+])
+def test_minimum_monthly_charge_applies_with_zero_units(
+    ke_tariffs, tariff_code, status, disco, minimum
+):
+    data = ke_input(disco=disco, tariff_code=tariff_code,
+                    consumer_status=status, monthly_units=0)
+    result = calculate_bill(select_tariff(ke_tariffs, data), data)
+    assert result.subtotal_pkr == pytest.approx(minimum)
+
+
+@pytest.mark.parametrize("month,rate", [
+    ("2026-01", 0.3298),
+    ("2026-04", 0.3504),
+    ("2026-07", -1.9857),
+    ("2026-11", 0.5194),
+])
+def test_ke_qta_rate_follows_the_billing_quarter(ke_tariffs, month, rate):
+    tariff = select_tariff(ke_tariffs, ke_input())
+    result = calculate_bill(tariff, ke_input(billing_month=month))
+
+    assert [a.amount_pkr for a in result.adjustments] == [pytest.approx(150 * rate, abs=0.01)]
+    assert not any("not applied" in w for w in result.warnings)
+
+
+@pytest.mark.parametrize("units,subtotal", [
+    (0, 2000),       # fixed 400 x 3 kW = 1200, topped up to the minimum
+    (100, 4090),     # 2890 energy + 1200 fixed, already above it
+])
+def test_agricultural_minimum_is_a_floor_on_energy_plus_fixed(ke_tariffs, units, subtotal):
+    data = ke_input(tariff_code="D-2(a)", consumer_status=None, monthly_units=units)
+    result = calculate_bill(select_tariff(ke_tariffs, data), data)
+    assert result.subtotal_pkr == pytest.approx(subtotal)
+
+
+@pytest.mark.parametrize("code, disco, percent", [
+    ("A-2(a)", "K-Electric", 2.0),
+    ("A-2(a)", "IESCO", 1.5),
+    ("A-2(a)", "LESCO", 1.5),
+    ("B-1(a)", "K-Electric", 1.5),
+    ("B-1(a)", "LESCO", 1.0),
+    ("D-2(a)", "IESCO", 1.0),
+])
+def test_electricity_duty_follows_the_province(ke_tariffs, code, disco, percent):
+    data = ke_input(disco=disco, tariff_code=code, consumer_status=None, monthly_units=100)
+    result = calculate_bill(select_tariff(ke_tariffs, data), data)
+
+    duty = [t.amount_pkr for t in result.taxes if t.name == "Electricity Duty"]
+    assert duty == [pytest.approx(result.energy_charge_pkr * percent / 100, abs=0.01)]
 
 
 def test_select_tariff_needs_consumer_status_for_domestic(ke_tariffs):
