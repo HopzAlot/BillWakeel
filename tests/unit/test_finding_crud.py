@@ -66,8 +66,17 @@ def test_finding_crud_operations():
                 },
             ]
 
-            # Save findings
-            saved = save_findings(db, "finding-test-001", findings)
+            # Save findings and response warnings
+            warnings = [
+                "The bill's meter reading could not be independently verified."
+            ]
+
+            saved = save_findings(
+                db,
+                "finding-test-001",
+                findings,
+                warnings=warnings,
+            )
 
             assert saved is not None
             assert len(saved) == 2
@@ -80,10 +89,11 @@ def test_finding_crud_operations():
             assert retrieved[0].difference_pkr == 500.0
             assert retrieved[1].confidence == "medium"
 
-            # Retrieve bill with its findings
+            # Retrieve bill with its findings and warnings
             bill = get_bill_with_findings(db, "finding-test-001")
 
             assert bill is not None
+            assert bill.warnings == warnings
             assert len(bill.findings) == 2
 
             # Saving again should replace old findings

@@ -9,8 +9,9 @@ def save_findings(
     db: Session,
     bill_id: str,
     findings: list,
+    warnings: list[str] | None = None,
 ) -> list[FindingRecord] | None:
-    """Replace and save all findings associated with a bill."""
+    """Replace findings and save response warnings for a bill."""
 
     bill = db.query(Bill).filter(Bill.bill_id == bill_id).first()
 
@@ -36,6 +37,8 @@ def save_findings(
                 **data,
             )
         )
+
+    bill.warnings = warnings if warnings is not None else []
 
     db.add_all(records)
     db.commit()
@@ -63,6 +66,6 @@ def get_bill_with_findings(
     db: Session,
     bill_id: str,
 ) -> Bill | None:
-    """Retrieve a bill together with its extraction and findings."""
+    """Retrieve a bill together with its extraction, warnings, and findings."""
 
     return db.query(Bill).filter(Bill.bill_id == bill_id).first()

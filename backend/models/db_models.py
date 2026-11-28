@@ -16,6 +16,7 @@ class Bill(Base):
     size_bytes = Column(Integer, nullable=False)
     file_path = Column(String, nullable=False)
     extraction = Column(JSON, nullable=True)
+    warnings = Column(JSON, nullable=False, default=list)
 
     findings = relationship(
         "Finding",
